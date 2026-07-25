@@ -140,4 +140,15 @@ public class UserServiceImpl implements UserService {
         }
         return user;
     }
+
+    @Override
+    public User getUserByPhone(String phone) {
+        LambdaQueryWrapper<User> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(User::getPhone, phone);
+        User user = userMapper.selectOne(wrapper);
+        if (user != null) {
+            user.setPassword(null);
+        }
+        return user;
+    }
 }

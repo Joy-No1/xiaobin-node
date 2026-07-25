@@ -1,8 +1,17 @@
 spring:
+  application:
+    name: xiaobin-community
+  cloud:
+    nacos:
+      config:
+        import-check:
+          enabled: false
+      discovery:
+        server-addr: 127.0.0.1:8848
   datasource:
-    url: jdbc:mysql://127.0.0.1:3306/xiaobin?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai&createDatabaseIfNotExist=true
+    url: jdbc:mysql://127.0.0.1:3306/xiaobin_community?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai
     username: root
-    password: root
+    password: 12356@xiaoLMX
     driver-class-name: com.mysql.cj.jdbc.Driver
   data:
     redis:
@@ -39,3 +48,6 @@ springdoc:
     enabled: true
   api-docs:
     enabled: true
+
+server:
+  port: 8083

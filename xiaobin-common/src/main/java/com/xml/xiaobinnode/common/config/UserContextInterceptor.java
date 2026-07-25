@@ -3,13 +3,12 @@ package com.xml.xiaobinnode.common.config;
 import com.xml.xiaobinnode.common.util.UserContext;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
 
-/**
- * 用户上下文拦截器 - 从Gateway转发的Header中提取用户ID
- */
 @Component
+@ConditionalOnWebApplication(type = ConditionalOnWebApplication.Type.SERVLET)
 public class UserContextInterceptor implements HandlerInterceptor {
 
     @Override

@@ -1,4 +1,22 @@
 spring:
+  application:
+    name: xiaobin-gateway
+  cloud:
+    nacos:
+      config:
+        import-check:
+          enabled: false
+      discovery:
+        server-addr: 127.0.0.1:8848
+    gateway:
+      globalcors:
+        cors-configurations:
+          '[/**]':
+            allowedOriginPatterns: "*"
+            allowedMethods: "*"
+            allowedHeaders: "*"
+            allowCredentials: true
+            maxAge: 3600
   data:
     redis:
       host: 127.0.0.1
@@ -21,3 +39,6 @@ springdoc:
     enabled: true
   api-docs:
     enabled: true
+
+server:
+  port: 8080

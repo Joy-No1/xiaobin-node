@@ -35,4 +35,9 @@ public interface UserService {
      * 获取用户信息
      */
     User getUserById(Long userId);
+
+    /**
+     * 根据手机号查找用户
+     */
+    User getUserByPhone(String phone);
 }

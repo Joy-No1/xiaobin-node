@@ -29,7 +29,7 @@
         <!-- Spring Web (for annotations like @PathVariable etc.) -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-webmvc</artifactId>
+            <artifactId>spring-boot-starter-web</artifactId>
             <scope>provided</scope>
         </dependency>
     </dependencies>

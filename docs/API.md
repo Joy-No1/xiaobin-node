@@ -77,11 +77,17 @@
 
 ### 查看他人主页 `GET /api/v1/users/{id}`
 
+### 按手机号查找 `GET /api/v1/users/search?phone=138xxxx`
+
+> 用于发起关系前查找对方。返回用户信息，不存在返回 404。
+
 ---
 
 ## 二、关系模块
 
 ### 发起关系 `POST /api/v1/relationships?targetUserId=2`
+
+> 服务端校验：双方都不能已有确认的关系；不能和自己建立关系
 
 ### 确认关系 `PUT /api/v1/relationships/{id}/confirm`
 

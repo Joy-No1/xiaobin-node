@@ -40,4 +40,14 @@ public class UserController {
         }
         return Result.success(user);
     }
+
+    @GetMapping("/search")
+    @Operation(summary = "根据手机号查找用户")
+    public Result<User> searchByPhone(@RequestParam String phone) {
+        User user = userService.getUserByPhone(phone);
+        if (user == null) {
+            return Result.notFound("用户不存在");
+        }
+        return Result.success(user);
+    }
 }

@@ -32,6 +32,28 @@ public class RelationshipServiceImpl implements RelationshipService {
             throw new BusinessException("不能和自己建立关系");
         }
 
+        // 检查对方是否已有关系
+        LambdaQueryWrapper<Relationship> targetWrapper = new LambdaQueryWrapper<>();
+        targetWrapper.and(w -> w
+                .eq(Relationship::getUser1Id, targetUserId)
+                .or()
+                .eq(Relationship::getUser2Id, targetUserId))
+                .eq(Relationship::getStatus, "CONFIRMED");
+        if (relationshipMapper.selectCount(targetWrapper) > 0) {
+            throw new BusinessException("对方已有情侣关系");
+        }
+
+        // 检查发起方是否已有关系
+        LambdaQueryWrapper<Relationship> myWrapper = new LambdaQueryWrapper<>();
+        myWrapper.and(w -> w
+                .eq(Relationship::getUser1Id, userId)
+                .or()
+                .eq(Relationship::getUser2Id, userId))
+                .eq(Relationship::getStatus, "CONFIRMED");
+        if (relationshipMapper.selectCount(myWrapper) > 0) {
+            throw new BusinessException("你已有情侣关系");
+        }
+
         // 检查是否已存在有效关系
         LambdaQueryWrapper<Relationship> wrapper = new LambdaQueryWrapper<>();
         wrapper.and(w -> w
