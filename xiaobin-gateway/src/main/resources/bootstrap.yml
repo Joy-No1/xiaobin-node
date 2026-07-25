@@ -1,0 +1,23 @@
+spring:
+  application:
+    name: xiaobin-gateway
+  cloud:
+    nacos:
+      discovery:
+        server-addr: 127.0.0.1:8848
+        namespace: xiaobin
+      config:
+        server-addr: 127.0.0.1:8848
+        namespace: xiaobin
+        file-extension: yaml
+        shared-configs:
+          - data-id: common-config.yaml
+            group: DEFAULT_GROUP
+            refresh: true
+
+server:
+  port: 8080
+
+logging:
+  level:
+    com.xml.xiaobinnode: debug
