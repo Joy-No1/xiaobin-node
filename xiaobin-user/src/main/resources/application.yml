@@ -4,26 +4,17 @@ spring:
   cloud:
     nacos:
       config:
+        server-addr: 127.0.0.1:8848
+        namespace: xiaobin
         import-check:
           enabled: false
       discovery:
         server-addr: 127.0.0.1:8848
-  datasource:
-    url: jdbc:mysql://127.0.0.1:3306/xiaobin_user?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai
-    username: root
-    password: 12356@xiaoLMX
-    driver-class-name: com.mysql.cj.jdbc.Driver
-  data:
-    redis:
-      host: 127.0.0.1
-      port: 6379
-      password:
-      database: 0
-      lettuce:
-        pool:
-          max-active: 8
-          max-idle: 8
-          min-idle: 0
+        namespace: xiaobin
+  config:
+    import:
+      - nacos:common-config.yaml?group=DEFAULT_GROUP&namespace=xiaobin
+      - nacos:xiaobin-user.yaml?group=DEFAULT_GROUP&namespace=xiaobin
 
 mybatis-plus:
   configuration:
@@ -31,13 +22,6 @@ mybatis-plus:
   global-config:
     db-config:
       id-type: auto
-      logic-delete-field: deleted
-      logic-delete-value: 1
-      logic-not-delete-value: 0
-
-jwt:
-  secret: xiaobin-node-secret-key-for-jwt-token-generation-2026
-  expire-seconds: 604800
 
 springdoc:
   swagger-ui:

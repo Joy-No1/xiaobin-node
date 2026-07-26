@@ -26,6 +26,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -251,7 +252,8 @@ public class CommunityServiceImpl implements CommunityService {
             String originalFilename = file.getOriginalFilename();
             String ext = originalFilename != null && originalFilename.contains(".")
                     ? originalFilename.substring(originalFilename.lastIndexOf(".")) : "";
-            String objectName = "images/" + IdUtil.fastSimpleUUID() + ext;
+            String datePath = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy/MM/dd"));
+            String objectName = "images/" + datePath + "/" + IdUtil.fastSimpleUUID() + ext;
 
             minioClient.putObject(PutObjectArgs.builder()
                     .bucket(bucketName)

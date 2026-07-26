@@ -4,41 +4,25 @@ spring:
   cloud:
     nacos:
       config:
+        server-addr: 127.0.0.1:8848
+        namespace: xiaobin
         import-check:
           enabled: false
       discovery:
         server-addr: 127.0.0.1:8848
-    gateway:
-      globalcors:
-        cors-configurations:
-          '[/**]':
-            allowedOriginPatterns: "*"
-            allowedMethods: "*"
-            allowedHeaders: "*"
-            allowCredentials: true
-            maxAge: 3600
-  data:
-    redis:
-      host: 127.0.0.1
-      port: 6379
-      password:
-      database: 0
-      lettuce:
-        pool:
-          max-active: 8
-          max-idle: 8
-          min-idle: 0
-
-jwt:
-  secret: xiaobin-node-secret-key-for-jwt-token-generation-2026
-  expire-seconds: 604800
-
-springdoc:
-  swagger-ui:
-    path: /swagger-ui.html
-    enabled: true
-  api-docs:
-    enabled: true
+        namespace: xiaobin
+  config:
+    import:
+      - nacos:common-config.yaml?group=DEFAULT_GROUP&namespace=xiaobin
+  gateway:
+    globalcors:
+      cors-configurations:
+        '[/**]':
+          allowedOriginPatterns: "*"
+          allowedMethods: "*"
+          allowedHeaders: "*"
+          allowCredentials: true
+          maxAge: 3600
 
 server:
   port: 8080
