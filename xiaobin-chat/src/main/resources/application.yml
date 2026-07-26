@@ -8,6 +8,11 @@ spring:
           enabled: false
       discovery:
         server-addr: 127.0.0.1:8848
+  datasource:
+    url: jdbc:mysql://127.0.0.1:3306/xiaobin_chat?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai
+    username: root
+    password: 12356@xiaoLMX
+    driver-class-name: com.mysql.cj.jdbc.Driver
   data:
     redis:
       host: 127.0.0.1
@@ -19,10 +24,13 @@ spring:
           max-active: 8
           max-idle: 8
           min-idle: 0
-    mongodb:
-      host: 127.0.0.1
-      port: 27017
-      database: xiaobin
+
+mybatis-plus:
+  configuration:
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+  global-config:
+    db-config:
+      id-type: auto
 
 jwt:
   secret: xiaobin-node-secret-key-for-jwt-token-generation-2026

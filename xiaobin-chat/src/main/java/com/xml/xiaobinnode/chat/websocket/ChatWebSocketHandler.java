@@ -1,7 +1,7 @@
 package com.xml.xiaobinnode.chat.websocket;
 
 import cn.hutool.json.JSONUtil;
-import com.xml.xiaobinnode.chat.document.ChatMessage;
+import com.xml.xiaobinnode.chat.entity.ChatMessage;
 import com.xml.xiaobinnode.chat.service.ChatService;
 import com.xml.xiaobinnode.common.constant.CommonConstants;
 import com.xml.xiaobinnode.common.util.JwtUtils;
