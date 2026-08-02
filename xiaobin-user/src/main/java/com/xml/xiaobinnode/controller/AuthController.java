@@ -1,10 +1,10 @@
-package com.xml.xiaobinnode.user.controller;
+package com.xml.xiaobinnode.controller;
 
 import com.xml.xiaobinnode.common.annotation.NoAuth;
 import com.xml.xiaobinnode.common.dto.Result;
-import com.xml.xiaobinnode.user.dto.LoginRequest;
-import com.xml.xiaobinnode.user.dto.RegisterRequest;
-import com.xml.xiaobinnode.user.service.UserService;
+import com.xml.xiaobinnode.dto.LoginRequest;
+import com.xml.xiaobinnode.dto.RegisterRequest;
+import com.xml.xiaobinnode.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;

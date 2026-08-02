@@ -1,7 +1,7 @@
-package com.xml.xiaobinnode.user.mapper;
+package com.xml.xiaobinnode.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.xml.xiaobinnode.user.entity.User;
+import com.xml.xiaobinnode.entity.User;
 import org.apache.ibatis.annotations.Mapper;
 
 @Mapper

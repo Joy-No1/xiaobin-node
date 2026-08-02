@@ -4,7 +4,7 @@ import lombok.Data;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
-import java.time.LocalDateTime;
+import java.util.Date;
 
 /**
  * 点赞文档 (MongoDB)
@@ -20,5 +20,5 @@ public class PostLike {
 
     private Long userId;
 
-    private LocalDateTime createdAt = LocalDateTime.now();
+    private Date createdAt = new Date();
 }

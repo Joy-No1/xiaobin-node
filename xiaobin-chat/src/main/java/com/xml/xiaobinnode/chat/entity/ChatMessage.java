@@ -3,7 +3,7 @@ package com.xml.xiaobinnode.chat.entity;
 import com.baomidou.mybatisplus.annotation.*;
 import lombok.Data;
 
-import java.time.LocalDateTime;
+import java.util.Date;
 
 /**
  * 聊天消息实体
@@ -28,5 +28,5 @@ public class ChatMessage {
     private Integer isRead;
 
     @TableField(fill = FieldFill.INSERT)
-    private LocalDateTime createdAt;
+    private Date createdAt;
 }

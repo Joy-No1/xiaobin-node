@@ -4,7 +4,7 @@ import lombok.Data;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
-import java.time.LocalDateTime;
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -32,7 +32,7 @@ public class Post {
     /** ACTIVE / DELETED */
     private String status = "ACTIVE";
 
-    private LocalDateTime createdAt = LocalDateTime.now();
+    private Date createdAt = new Date();
 
-    private LocalDateTime updatedAt = LocalDateTime.now();
+    private Date updatedAt = new Date();
 }

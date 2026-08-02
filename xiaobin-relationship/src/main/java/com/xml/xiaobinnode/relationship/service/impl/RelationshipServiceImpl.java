@@ -14,7 +14,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
+import java.util.Date;
 import java.util.List;
 
 @Slf4j
@@ -94,7 +94,7 @@ public class RelationshipServiceImpl implements RelationshipService {
         }
 
         relationship.setStatus("CONFIRMED");
-        relationship.setConfirmedAt(LocalDateTime.now());
+        relationship.setConfirmedAt(new Date());
         relationshipMapper.updateById(relationship);
 
         // 初始化双方分数（各100分）
@@ -133,7 +133,7 @@ public class RelationshipServiceImpl implements RelationshipService {
         }
 
         relationship.setStatus("DISSOLVED");
-        relationship.setDissolvedAt(LocalDateTime.now());
+        relationship.setDissolvedAt(new Date());
         relationshipMapper.updateById(relationship);
 
         log.info("关系已解除: relationshipId={}", relationshipId);
@@ -155,7 +155,7 @@ public class RelationshipServiceImpl implements RelationshipService {
         if (scores.isEmpty()) {
             throw new BusinessException("分数记录不存在");
         }
-        return scores.get(0);
+        return scores.getFirst();
     }
 
     @Override
@@ -192,7 +192,7 @@ public class RelationshipServiceImpl implements RelationshipService {
         }
 
         // 计算分数变化
-        int scoreChange = 0;
+        int scoreChange;
         String scoreReason = reason;
 
         if (scoreItemId != null) {

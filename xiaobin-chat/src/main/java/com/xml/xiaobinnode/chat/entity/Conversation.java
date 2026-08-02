@@ -3,7 +3,8 @@ package com.xml.xiaobinnode.chat.entity;
 import com.baomidou.mybatisplus.annotation.*;
 import lombok.Data;
 
-import java.time.LocalDateTime;
+import java.util.Date;
+
 
 /**
  * 聊天会话实体
@@ -21,11 +22,11 @@ public class Conversation {
 
     private String lastMessage;
 
-    private LocalDateTime lastMessageTime;
+    private Date lastMessageTime;
 
     @TableField(fill = FieldFill.INSERT)
-    private LocalDateTime createdAt;
+    private Date createdAt;
 
     @TableField(fill = FieldFill.INSERT_UPDATE)
-    private LocalDateTime updatedAt;
+    private Date updatedAt;
 }

@@ -25,9 +25,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 @Slf4j
@@ -58,8 +58,8 @@ public class CommunityServiceImpl implements CommunityService {
         post.setLikeCount(0);
         post.setCommentCount(0);
         post.setStatus("ACTIVE");
-        post.setCreatedAt(LocalDateTime.now());
-        post.setUpdatedAt(LocalDateTime.now());
+        post.setCreatedAt(new Date());
+        post.setUpdatedAt(new Date());
         post = postRepository.save(post);
         log.info("帖子发布成功: postId={}, userId={}", post.getId(), userId);
         return post;
@@ -83,7 +83,7 @@ public class CommunityServiceImpl implements CommunityService {
             throw new BusinessException("只能删除自己的帖子");
         }
         post.setStatus("DELETED");
-        post.setUpdatedAt(LocalDateTime.now());
+        post.setUpdatedAt(new Date());
         postRepository.save(post);
     }
 
@@ -139,7 +139,7 @@ public class CommunityServiceImpl implements CommunityService {
         comment.setContent(content);
         comment.setReplyToUserId(replyToUserId);
         comment.setParentCommentId(parentCommentId);
-        comment.setCreatedAt(LocalDateTime.now());
+        comment.setCreatedAt(new Date());
         comment = commentRepository.save(comment);
 
         // 更新帖子评论数
@@ -252,7 +252,7 @@ public class CommunityServiceImpl implements CommunityService {
             String originalFilename = file.getOriginalFilename();
             String ext = originalFilename != null && originalFilename.contains(".")
                     ? originalFilename.substring(originalFilename.lastIndexOf(".")) : "";
-            String datePath = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy/MM/dd"));
+            String datePath = new SimpleDateFormat("yyyy/MM/dd").format(new Date());
             String objectName = "images/" + datePath + "/" + IdUtil.fastSimpleUUID() + ext;
 
             minioClient.putObject(PutObjectArgs.builder()

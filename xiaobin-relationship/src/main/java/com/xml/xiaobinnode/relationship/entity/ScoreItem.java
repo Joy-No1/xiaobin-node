@@ -3,7 +3,8 @@ package com.xml.xiaobinnode.relationship.entity;
 import com.baomidou.mybatisplus.annotation.*;
 import lombok.Data;
 
-import java.time.LocalDateTime;
+import java.util.Date;
+
 
 /**
  * 自定义加减分项目实体
@@ -34,5 +35,5 @@ public class ScoreItem {
     private String icon;
 
     @TableField(fill = FieldFill.INSERT)
-    private LocalDateTime createdAt;
+    private Date createdAt;
 }

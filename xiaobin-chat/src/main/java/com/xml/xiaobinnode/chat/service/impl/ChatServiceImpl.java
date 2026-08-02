@@ -14,7 +14,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
+import java.util.Date;
 import java.util.List;
 
 @Slf4j
@@ -44,7 +44,7 @@ public class ChatServiceImpl implements ChatService {
         messageMapper.insert(message);
 
         conversation.setLastMessage(content.length() > 50 ? content.substring(0, 50) + "..." : content);
-        conversation.setLastMessageTime(LocalDateTime.now());
+        conversation.setLastMessageTime(new Date());
         conversationMapper.updateById(conversation);
 
         return message;

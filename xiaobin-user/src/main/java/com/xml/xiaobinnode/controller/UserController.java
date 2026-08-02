@@ -1,9 +1,10 @@
-package com.xml.xiaobinnode.user.controller;
+package com.xml.xiaobinnode.controller;
 
 import com.xml.xiaobinnode.common.dto.Result;
 import com.xml.xiaobinnode.common.util.UserContext;
-import com.xml.xiaobinnode.user.entity.User;
-import com.xml.xiaobinnode.user.service.UserService;
+import com.xml.xiaobinnode.dto.UserDTO;
+import com.xml.xiaobinnode.entity.User;
+import com.xml.xiaobinnode.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -18,27 +19,27 @@ public class UserController {
     private final UserService userService;
 
     @GetMapping("/me")
-    @Operation(summary = "获取当前用户信息")
-    public Result<User> getCurrentUser() {
+    @Operation(summary = "获取当前用户信息（含地址）")
+    public Result<UserDTO> getCurrentUser() {
         Long userId = Long.valueOf(UserContext.getUserId());
-        return Result.success(userService.getCurrentUser(userId));
+        return Result.success(userService.getCurrentUserDTO(userId));
     }
 
     @PutMapping("/me")
-    @Operation(summary = "更新个人信息")
-    public Result<User> updateUser(@RequestBody User user) {
+    @Operation(summary = "更新个人信息", description = "同时更新用户信息和地址，地址数据放在 location 字段中")
+    public Result<User> updateUser(@RequestBody UserDTO userDTO) {
         Long userId = Long.valueOf(UserContext.getUserId());
-        return Result.success(userService.updateUser(userId, user));
+        return Result.success(userService.updateUser(userId, userDTO.getUser(), userDTO.getLocation()));
     }
 
     @GetMapping("/{id}")
-    @Operation(summary = "查看用户主页")
-    public Result<User> getUserById(@PathVariable Long id) {
-        User user = userService.getUserById(id);
-        if (user == null) {
+    @Operation(summary = "查看用户主页（含地址）")
+    public Result<UserDTO> getUserById(@PathVariable Long id) {
+        com.xml.xiaobinnode.dto.UserDTO dto = userService.getUserDTOById(id);
+        if (dto == null) {
             return Result.notFound("用户不存在");
         }
-        return Result.success(user);
+        return Result.success(dto);
     }
 
     @GetMapping("/search")

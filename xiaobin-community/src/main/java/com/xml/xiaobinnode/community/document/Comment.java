@@ -4,7 +4,8 @@ import lombok.Data;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
-import java.time.LocalDateTime;
+import java.util.Date;
+
 
 /**
  * 评论文档 (MongoDB)
@@ -28,5 +29,5 @@ public class Comment {
     /** 父评论ID（回复评论时使用） */
     private String parentCommentId;
 
-    private LocalDateTime createdAt = LocalDateTime.now();
+    private Date createdAt = new Date();
 }

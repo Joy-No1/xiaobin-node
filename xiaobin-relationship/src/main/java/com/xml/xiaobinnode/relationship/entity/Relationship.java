@@ -3,7 +3,7 @@ package com.xml.xiaobinnode.relationship.entity;
 import com.baomidou.mybatisplus.annotation.*;
 import lombok.Data;
 
-import java.time.LocalDateTime;
+import java.util.Date;
 
 /**
  * 情侣关系实体
@@ -25,11 +25,11 @@ public class Relationship {
     private String status;
 
     @TableField(fill = FieldFill.INSERT)
-    private LocalDateTime createdAt;
+    private Date createdAt;
 
     /** 确认时间 */
-    private LocalDateTime confirmedAt;
+    private Date confirmedAt;
 
     /** 解除时间 */
-    private LocalDateTime dissolvedAt;
+    private Date dissolvedAt;
 }

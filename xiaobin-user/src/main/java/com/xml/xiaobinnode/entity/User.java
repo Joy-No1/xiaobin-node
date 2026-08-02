@@ -1,9 +1,9 @@
-package com.xml.xiaobinnode.user.entity;
+package com.xml.xiaobinnode.entity;
 
 import com.baomidou.mybatisplus.annotation.*;
 import lombok.Data;
 
-import java.time.LocalDateTime;
+import java.util.Date;
 
 /**
  * 用户实体
@@ -42,9 +42,30 @@ public class User {
     /** 状态: ACTIVE/DISABLED */
     private String status;
 
+    /** 生日 */
+    private Date birthday;
+
+    /** 公司 */
+    private String company;
+
+    /** 学校 */
+    private String school;
+
+    /** 身高 */
+    private Double height;
+
+    /** 体重 */
+    private Double weight;
+
+    /** 学历 */
+    private String education;
+
+    /** 地址ID */
+    private String locationId;
+
     @TableField(fill = FieldFill.INSERT)
-    private LocalDateTime createdAt;
+    private Date createdAt;
 
     @TableField(fill = FieldFill.INSERT_UPDATE)
-    private LocalDateTime updatedAt;
+    private Date updatedAt;
 }
