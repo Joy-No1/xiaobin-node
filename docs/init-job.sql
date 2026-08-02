@@ -1,7 +1,17 @@
 -- ===================================================
 -- XXL-Job Admin 调度中心数据库初始化
 -- 数据库名称: xiaobin-job
--- 适用于 XXL-Job 2.4.x
+-- 适用于 XXL-Job 3.4.2
+--
+-- Admin 启动方式 (Docker):
+--   docker run -d --name xxl-job-admin -p 8088:8080 \
+--     -e PARAMS="--spring.datasource.url=jdbc:mysql://host:3306/xiaobin-job?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Shanghai \
+--                --spring.datasource.username=root \
+--                --spring.datasource.password=你的密码" \
+--     xuxueli/xxl-job-admin:3.4.2
+--
+-- 访问: http://127.0.0.1:8088/xxl-job-admin
+-- 默认账号: admin / 123456
 -- ===================================================
 
 CREATE DATABASE IF NOT EXISTS `xiaobin-job`

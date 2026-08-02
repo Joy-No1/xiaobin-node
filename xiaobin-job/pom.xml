@@ -41,7 +41,6 @@
     <modules>
         <module>xiaobin-job-core</module>
         <module>xiaobin-job-executor</module>
-        <module>xiaobin-job-admin</module>
     </modules>
 
 </project>
