@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>com.xml</groupId>
+        <artifactId>xiaobin-node</artifactId>
+        <version>0.0.1-SNAPSHOT</version>
+    </parent>
+
+    <artifactId>xiaobin-job</artifactId>
+    <packaging>pom</packaging>
+    <description>定时任务服务 - XXL-Job调度 (执行器 + 调度中心)</description>
+
+    <dependencies>
+        <!-- 所有子模块共享 -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.mysql</groupId>
+            <artifactId>mysql-connector-j</artifactId>
+            <scope>runtime</scope>
+        </dependency>
+    </dependencies>
+
+    <dependencyManagement>
+        <dependencies>
+            <!-- 子模块间引用的版本管理 -->
+            <dependency>
+                <groupId>com.xml</groupId>
+                <artifactId>xiaobin-job-core</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
+    <modules>
+        <module>xiaobin-job-core</module>
+        <module>xiaobin-job-executor</module>
+        <module>xiaobin-job-admin</module>
+    </modules>
+
+</project>

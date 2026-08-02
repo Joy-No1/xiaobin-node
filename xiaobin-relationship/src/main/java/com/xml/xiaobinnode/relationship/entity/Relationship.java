@@ -21,7 +21,7 @@ public class Relationship {
     /** 接收方 ID */
     private Long receiverId;
 
-    /** 状态: PENDING-待确认, CONFIRMED-已确认, DISSOLVED-已解除 */
+    /** 状态: PENDING-待确认, CONFIRMED-已确认, DISSOLVED-已解除 REJECTED-已拒绝 EXPIRED-已过期 */
     private String status;
 
     @TableField(fill = FieldFill.INSERT)

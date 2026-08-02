@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>com.xml</groupId>
+        <artifactId>xiaobin-job</artifactId>
+        <version>0.0.1-SNAPSHOT</version>
+    </parent>
+
+    <artifactId>xiaobin-job-core</artifactId>
+    <packaging>jar</packaging>
+    <description>定时任务公共模块 - XXL-Job核心封装 + 共享Handler基类</description>
+
+    <dependencies>
+        <!-- XXL-Job 官方核心库 (@XxlJob注解, XxlJobSpringExecutor等) -->
+        <dependency>
+            <groupId>com.xuxueli</groupId>
+            <artifactId>xxl-job-core</artifactId>
+        </dependency>
+
+        <!-- 项目公共模块 (DTO, 异常, 工具类) -->
+        <dependency>
+            <groupId>com.xml</groupId>
+            <artifactId>xiaobin-common</artifactId>
+        </dependency>
+
+        <!-- Feign (Handler中通过Feign调用业务服务) -->
+        <dependency>
+            <groupId>com.xml</groupId>
+            <artifactId>xiaobin-api</artifactId>
+        </dependency>
+    </dependencies>
+
+</project>

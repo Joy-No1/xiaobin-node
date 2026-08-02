@@ -13,9 +13,9 @@ public enum EducationEnum {
 
     MASTER("MASTER", "硕士研究生"),
 
-    DOCTOR("MASTER", "博士研究生"),
+    DOCTOR("DOCTOR", "博士研究生"),
 
-    OTHER("MASTER", "其他");
+    OTHER("OTHER", "其他");
 
     private final String code;
     private final String description;

@@ -6,18 +6,18 @@ USE xiaobin_relationship;
 
 CREATE TABLE IF NOT EXISTS `relationship` (
     `id` BIGINT NOT NULL AUTO_INCREMENT COMMENT '关系ID',
-    `user1_id` BIGINT NOT NULL COMMENT '用户1 ID',
-    `user2_id` BIGINT NOT NULL COMMENT '用户2 ID',
+    `initiator_Id` BIGINT NOT NULL COMMENT '用户1 ID',
+    `receiver_Id` BIGINT NOT NULL COMMENT '用户2 ID',
     `status` VARCHAR(20) NOT NULL DEFAULT 'PENDING' COMMENT 'PENDING/CONFIRMED/DISSOLVED',
     `initiated_by` BIGINT NOT NULL COMMENT '发起方用户ID',
     `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     `confirmed_at` DATETIME DEFAULT NULL COMMENT '确认时间',
     `dissolved_at` DATETIME DEFAULT NULL COMMENT '解除时间',
     PRIMARY KEY (`id`),
-    KEY `idx_user1` (`user1_id`),
-    KEY `idx_user2` (`user2_id`),
+    KEY `idx_user1` (`initiator_Id`),
+    KEY `idx_user2` (`receiver_Id`),
     KEY `idx_status` (`status`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='情侣关系表';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='用户关系表';
 
 CREATE TABLE IF NOT EXISTS `score` (
     `id` BIGINT NOT NULL AUTO_INCREMENT COMMENT '分数ID',
