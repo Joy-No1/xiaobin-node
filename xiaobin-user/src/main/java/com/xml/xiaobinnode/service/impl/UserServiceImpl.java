@@ -15,12 +15,16 @@ import com.xml.xiaobinnode.mapper.UserMapper;
 import com.xml.xiaobinnode.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.ObjectUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.BeanUtils;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
 @Slf4j
@@ -103,16 +107,26 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    @Transactional
+    @Transactional(rollbackFor = Exception.class)
     public User updateUser(Long userId, User updateUser, Location location) {
         User user = userMapper.selectById(userId);
         if (user == null) {
             throw new BusinessException("用户不存在");
         }
 
-        if (location != null && hasLocationData(location)) {
+        String locationId = user.getLocationId();
+        if (location != null && StringUtils.isBlank(locationId) && hasLocationData(location)) {
             locationMapper.insert(location);
             user.setLocationId(String.valueOf(location.getId()));
+        }
+
+        if (ObjectUtils.allNotNull(locationId, location)) {
+            Location dbLocation = locationMapper.selectById(locationId);
+            if (Objects.nonNull(dbLocation)) {
+                BeanUtils.copyProperties(location, dbLocation);
+                dbLocation.setId(locationId);
+                locationMapper.updateById(dbLocation);
+            }
         }
 
         if (updateUser.getNickname() != null) user.setNickname(updateUser.getNickname());

@@ -18,8 +18,8 @@ public class Location implements Serializable {
     /**
      * 主键ID
      */
-    @TableId(type = IdType.AUTO)
-    private Long id;
+    @TableId(type = IdType.ASSIGN_UUID)
+    private String id;
 
     /**
      * 省级行政区名称
