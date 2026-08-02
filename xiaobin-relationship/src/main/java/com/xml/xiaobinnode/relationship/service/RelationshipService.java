@@ -3,6 +3,8 @@ package com.xml.xiaobinnode.relationship.service;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.xml.xiaobinnode.relationship.entity.*;
 
+import java.util.List;
+
 /**
  * 关系服务接口
  */
@@ -62,4 +64,17 @@ public interface RelationshipService {
      * 获取打分记录
      */
     Page<ScoreRecord> getScoreRecords(Long relationshipId, int page, int size);
+
+    /**
+     * 获取接收到的请求
+     * @param userId 用户id
+     */
+    List<Relationship> getReceived(Long userId);
+
+    /**
+     * 获取发送的请求
+     * @param userId
+     * @return
+     */
+    List<Relationship> getSent(Long userId);
 }

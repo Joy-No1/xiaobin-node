@@ -11,6 +11,8 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @Tag(name = "关系接口", description = "情侣关系管理与好感度打分")
 @RestController
 @RequestMapping("/api/v1/relationships")
@@ -24,6 +26,22 @@ public class RelationshipController {
     public Result<Relationship> createRelationship(@RequestParam Long targetUserId) {
         Long userId = Long.valueOf(UserContext.getUserId());
         return Result.success(relationshipService.createRelationship(userId, targetUserId));
+    }
+
+    @GetMapping("/received")
+    @Operation(summary = "接收到的关系请求", description = "查看自己接收到的关系请求")
+    public Result<List<Relationship>> receivedRelationship() {
+        Long userId = Long.valueOf(UserContext.getUserId());
+        List<Relationship> relationshipList = relationshipService.getReceived(userId);
+        return Result.success(relationshipList);
+    }
+
+    @GetMapping("/sent")
+    @Operation(summary = "发送出去的关系请求", description = "查看自己发送的关系请求")
+    public Result<List<Relationship>> sentRelationship() {
+        Long userId = Long.valueOf(UserContext.getUserId());
+        List<Relationship> relationshipList = relationshipService.getSent(userId);
+        return Result.success(relationshipList);
     }
 
     @PutMapping("/{id}/confirm")
@@ -80,8 +98,8 @@ public class RelationshipController {
     @PutMapping("/{id}/score-items/{itemId}")
     @Operation(summary = "修改加减分项")
     public Result<ScoreItem> updateScoreItem(@PathVariable Long id,
-                                              @PathVariable Long itemId,
-                                              @RequestBody ScoreItem item) {
+                                             @PathVariable Long itemId,
+                                             @RequestBody ScoreItem item) {
         Long userId = Long.valueOf(UserContext.getUserId());
         return Result.success(relationshipService.updateScoreItem(itemId, userId, item));
     }
@@ -97,8 +115,8 @@ public class RelationshipController {
     @GetMapping("/{id}/score-records")
     @Operation(summary = "打分记录", description = "分页查询关系的打分历史记录")
     public Result<Page<ScoreRecord>> getScoreRecords(@PathVariable Long id,
-                                                      @RequestParam(defaultValue = "1") int page,
-                                                      @RequestParam(defaultValue = "20") int size) {
+                                                     @RequestParam(defaultValue = "1") int page,
+                                                     @RequestParam(defaultValue = "20") int size) {
         return Result.success(relationshipService.getScoreRecords(id, page, size));
     }
 }

@@ -1,9 +1,11 @@
 package com.xml.xiaobinnode.relationship.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.extension.conditions.query.LambdaQueryChainWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.xml.xiaobinnode.common.constant.CommonConstants;
 import com.xml.xiaobinnode.common.exception.BusinessException;
+import com.xml.xiaobinnode.relationship.constans.RelationEnum;
 import com.xml.xiaobinnode.relationship.entity.*;
 import com.xml.xiaobinnode.relationship.mapper.*;
 import com.xml.xiaobinnode.relationship.service.RelationshipService;
@@ -35,9 +37,9 @@ public class RelationshipServiceImpl implements RelationshipService {
         // 检查对方是否已有关系
         LambdaQueryWrapper<Relationship> targetWrapper = new LambdaQueryWrapper<>();
         targetWrapper.and(w -> w
-                .eq(Relationship::getUser1Id, targetUserId)
+                .eq(Relationship::getInitiatorId, targetUserId)
                 .or()
-                .eq(Relationship::getUser2Id, targetUserId))
+                .eq(Relationship::getReceiverId, targetUserId))
                 .eq(Relationship::getStatus, "CONFIRMED");
         if (relationshipMapper.selectCount(targetWrapper) > 0) {
             throw new BusinessException("对方已有情侣关系");
@@ -46,9 +48,9 @@ public class RelationshipServiceImpl implements RelationshipService {
         // 检查发起方是否已有关系
         LambdaQueryWrapper<Relationship> myWrapper = new LambdaQueryWrapper<>();
         myWrapper.and(w -> w
-                .eq(Relationship::getUser1Id, userId)
+                .eq(Relationship::getInitiatorId, userId)
                 .or()
-                .eq(Relationship::getUser2Id, userId))
+                .eq(Relationship::getReceiverId, userId))
                 .eq(Relationship::getStatus, "CONFIRMED");
         if (relationshipMapper.selectCount(myWrapper) > 0) {
             throw new BusinessException("你已有情侣关系");
@@ -57,18 +59,17 @@ public class RelationshipServiceImpl implements RelationshipService {
         // 检查是否已存在有效关系
         LambdaQueryWrapper<Relationship> wrapper = new LambdaQueryWrapper<>();
         wrapper.and(w -> w
-                .and(w1 -> w1.eq(Relationship::getUser1Id, userId).eq(Relationship::getUser2Id, targetUserId))
-                .or(w1 -> w1.eq(Relationship::getUser1Id, targetUserId).eq(Relationship::getUser2Id, userId))
+                .and(w1 -> w1.eq(Relationship::getInitiatorId, userId).eq(Relationship::getReceiverId, targetUserId))
+                .or(w1 -> w1.eq(Relationship::getInitiatorId, targetUserId).eq(Relationship::getReceiverId, userId))
         ).ne(Relationship::getStatus, "DISSOLVED");
         if (relationshipMapper.selectCount(wrapper) > 0) {
             throw new BusinessException("已存在有效关系或待确认的关系请求");
         }
 
         Relationship relationship = new Relationship();
-        relationship.setUser1Id(userId);
-        relationship.setUser2Id(targetUserId);
+        relationship.setInitiatorId(userId);
+        relationship.setReceiverId(targetUserId);
         relationship.setStatus("PENDING");
-        relationship.setInitiatedBy(userId);
         relationshipMapper.insert(relationship);
 
         log.info("关系请求已发起: relationshipId={}, user1={}, user2={}", relationship.getId(), userId, targetUserId);
@@ -87,13 +88,8 @@ public class RelationshipServiceImpl implements RelationshipService {
             throw new BusinessException("该关系不是待确认状态");
         }
 
-        // 确认方不能是发起方
-        if (relationship.getInitiatedBy().equals(userId)) {
-            throw new BusinessException("不能确认自己发起的关系");
-        }
-
         // 确认方必须是关系中的用户
-        if (!relationship.getUser2Id().equals(userId)) {
+        if (!relationship.getReceiverId().equals(userId)) {
             throw new BusinessException("无权确认此关系");
         }
 
@@ -104,15 +100,15 @@ public class RelationshipServiceImpl implements RelationshipService {
         // 初始化双方分数（各100分）
         Score score1 = new Score();
         score1.setRelationshipId(relationshipId);
-        score1.setScorerId(relationship.getUser1Id());
-        score1.setTargetId(relationship.getUser2Id());
+        score1.setScorerId(relationship.getInitiatorId());
+        score1.setTargetId(relationship.getReceiverId());
         score1.setCurrentScore(CommonConstants.INITIAL_SCORE);
         scoreMapper.insert(score1);
 
         Score score2 = new Score();
         score2.setRelationshipId(relationshipId);
-        score2.setScorerId(relationship.getUser2Id());
-        score2.setTargetId(relationship.getUser1Id());
+        score2.setScorerId(relationship.getReceiverId());
+        score2.setTargetId(relationship.getInitiatorId());
         score2.setCurrentScore(CommonConstants.INITIAL_SCORE);
         scoreMapper.insert(score2);
 
@@ -132,7 +128,7 @@ public class RelationshipServiceImpl implements RelationshipService {
             throw new BusinessException("只能解除已确认的关系");
         }
 
-        if (!relationship.getUser1Id().equals(userId) && !relationship.getUser2Id().equals(userId)) {
+        if (!relationship.getInitiatorId().equals(userId) && !relationship.getReceiverId().equals(userId)) {
             throw new BusinessException("无权解除此关系");
         }
 
@@ -146,7 +142,7 @@ public class RelationshipServiceImpl implements RelationshipService {
     @Override
     public Relationship getMyRelationship(Long userId) {
         LambdaQueryWrapper<Relationship> wrapper = new LambdaQueryWrapper<>();
-        wrapper.and(w -> w.eq(Relationship::getUser1Id, userId).or().eq(Relationship::getUser2Id, userId))
+        wrapper.and(w -> w.eq(Relationship::getInitiatorId, userId).or().eq(Relationship::getReceiverId, userId))
                 .eq(Relationship::getStatus, "CONFIRMED");
         return relationshipMapper.selectOne(wrapper);
     }
@@ -172,10 +168,10 @@ public class RelationshipServiceImpl implements RelationshipService {
 
         // 确定被打分人
         Long targetId;
-        if (relationship.getUser1Id().equals(scorerId)) {
-            targetId = relationship.getUser2Id();
-        } else if (relationship.getUser2Id().equals(scorerId)) {
-            targetId = relationship.getUser1Id();
+        if (relationship.getInitiatorId().equals(scorerId)) {
+            targetId = relationship.getReceiverId();
+        } else if (relationship.getReceiverId().equals(scorerId)) {
+            targetId = relationship.getInitiatorId();
         } else {
             throw new BusinessException("不是关系中的用户");
         }
@@ -296,5 +292,21 @@ public class RelationshipServiceImpl implements RelationshipService {
         wrapper.eq(ScoreRecord::getRelationshipId, relationshipId)
                 .orderByDesc(ScoreRecord::getCreatedAt);
         return scoreRecordMapper.selectPage(new Page<>(page, size), wrapper);
+    }
+
+    @Override
+    public List<Relationship> getReceived(Long userId) {
+        return new LambdaQueryChainWrapper<>(relationshipMapper)
+                .eq(Relationship::getReceiverId,userId)
+                .eq(Relationship::getStatus, RelationEnum.PENDING.getCode())
+                .list();
+    }
+
+    @Override
+    public List<Relationship> getSent(Long userId) {
+        return new LambdaQueryChainWrapper<>(relationshipMapper)
+                .eq(Relationship::getInitiatorId,userId)
+                .eq(Relationship::getStatus, RelationEnum.PENDING.getCode())
+                .list();
     }
 }

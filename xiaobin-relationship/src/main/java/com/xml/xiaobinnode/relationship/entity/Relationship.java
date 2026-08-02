@@ -15,17 +15,14 @@ public class Relationship {
     @TableId(type = IdType.AUTO)
     private Long id;
 
-    /** 用户1 ID */
-    private Long user1Id;
+    /** 发起方 ID */
+    private Long initiatorId;
 
-    /** 用户2 ID */
-    private Long user2Id;
+    /** 接收方 ID */
+    private Long receiverId;
 
     /** 状态: PENDING-待确认, CONFIRMED-已确认, DISSOLVED-已解除 */
     private String status;
-
-    /** 发起方用户ID */
-    private Long initiatedBy;
 
     @TableField(fill = FieldFill.INSERT)
     private LocalDateTime createdAt;
