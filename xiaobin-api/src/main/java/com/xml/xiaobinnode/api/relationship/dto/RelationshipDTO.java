@@ -21,6 +21,9 @@ public class RelationshipDTO {
     /** PENDING / CONFIRMED / DISSOLVED */
     private String status;
 
+    /** 关系类型编码（关联字典 sys_dict_item，type_code=RELATION_TYPE） */
+    private String relationType;
+
     private Date createdAt;
 
     private Date confirmedAt;

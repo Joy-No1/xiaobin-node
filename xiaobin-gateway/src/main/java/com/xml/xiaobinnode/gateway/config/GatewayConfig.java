@@ -19,6 +19,9 @@ public class GatewayConfig {
                 .route("xiaobin-user", r -> r
                         .path("/api/v1/auth/**", "/api/v1/users/**")
                         .uri("lb://xiaobin-user"))
+                .route("xiaobin-dict", r -> r
+                        .path("/api/v1/dict/**")
+                        .uri("lb://xiaobin-user"))
                 .route("xiaobin-region", r -> r
                         .path("/region/**")
                         .uri("lb://xiaobin-user"))

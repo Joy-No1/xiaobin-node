@@ -29,7 +29,7 @@ public class RelationshipServiceImpl implements RelationshipService {
 
     @Override
     @Transactional
-    public Relationship createRelationship(Long userId, Long targetUserId) {
+    public Relationship createRelationship(Long userId, Long targetUserId, String relationType) {
         if (userId.equals(targetUserId)) {
             throw new BusinessException("不能和自己建立关系");
         }
@@ -70,9 +70,11 @@ public class RelationshipServiceImpl implements RelationshipService {
         relationship.setInitiatorId(userId);
         relationship.setReceiverId(targetUserId);
         relationship.setStatus("PENDING");
+        relationship.setRelationType(relationType);
         relationshipMapper.insert(relationship);
 
-        log.info("关系请求已发起: relationshipId={}, user1={}, user2={}", relationship.getId(), userId, targetUserId);
+        log.info("关系请求已发起: relationshipId={}, type={}, user1={}, user2={}",
+                relationship.getId(), relationType, userId, targetUserId);
         return relationship;
     }
 
@@ -140,11 +142,11 @@ public class RelationshipServiceImpl implements RelationshipService {
     }
 
     @Override
-    public Relationship getMyRelationship(Long userId) {
+    public List<Relationship> getMyRelationship(Long userId) {
         LambdaQueryWrapper<Relationship> wrapper = new LambdaQueryWrapper<>();
         wrapper.and(w -> w.eq(Relationship::getInitiatorId, userId).or().eq(Relationship::getReceiverId, userId))
                 .eq(Relationship::getStatus, "CONFIRMED");
-        return relationshipMapper.selectOne(wrapper);
+        return relationshipMapper.selectList(wrapper);
     }
 
     @Override

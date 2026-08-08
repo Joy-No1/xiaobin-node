@@ -22,7 +22,8 @@ public interface RelationshipFeignClient {
     /** 发起关系请求 */
     @PostMapping
     Result<RelationshipDTO> createRelationship(@RequestHeader("X-User-Id") Long userId,
-                                                @RequestParam("targetUserId") Long targetUserId);
+                                                @RequestParam("targetUserId") Long targetUserId,
+                                                @RequestParam(value = "relationType", required = false, defaultValue = "COUPLE") String relationType);
 
     /** 接收到的关系请求 */
     @GetMapping("/received")

@@ -9,6 +9,7 @@ CREATE TABLE IF NOT EXISTS `relationship` (
     `initiator_Id` BIGINT NOT NULL COMMENT '用户1 ID',
     `receiver_Id` BIGINT NOT NULL COMMENT '用户2 ID',
     `status` VARCHAR(20) NOT NULL DEFAULT 'PENDING' COMMENT 'PENDING/CONFIRMED/DISSOLVED',
+    `relation_type` VARCHAR(50) DEFAULT NULL COMMENT '关系类型编码（关联sys_dict_item.item_code, type_code=RELATION_TYPE）',
     `initiated_by` BIGINT NOT NULL COMMENT '发起方用户ID',
     `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     `confirmed_at` DATETIME DEFAULT NULL COMMENT '确认时间',

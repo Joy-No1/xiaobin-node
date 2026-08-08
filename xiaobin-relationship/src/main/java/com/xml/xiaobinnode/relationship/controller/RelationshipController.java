@@ -22,10 +22,11 @@ public class RelationshipController {
     private final RelationshipService relationshipService;
 
     @PostMapping
-    @Operation(summary = "发起关系请求", description = "向对方发起情侣关系请求")
-    public Result<Relationship> createRelationship(@RequestParam Long targetUserId) {
+    @Operation(summary = "发起关系请求", description = "向对方发起关系请求，可指定关系类型（默认情侣）")
+    public Result<Relationship> createRelationship(@RequestParam Long targetUserId,
+                                                   @RequestParam(required = false, defaultValue = "COUPLE") String relationType) {
         Long userId = Long.valueOf(UserContext.getUserId());
-        return Result.success(relationshipService.createRelationship(userId, targetUserId));
+        return Result.success(relationshipService.createRelationship(userId, targetUserId, relationType));
     }
 
     @GetMapping("/received")
@@ -61,7 +62,7 @@ public class RelationshipController {
 
     @GetMapping("/me")
     @Operation(summary = "获取我的关系", description = "获取当前登录用户的已确认关系")
-    public Result<Relationship> getMyRelationship() {
+    public Result<List<Relationship>> getMyRelationship() {
         Long userId = Long.valueOf(UserContext.getUserId());
         return Result.success(relationshipService.getMyRelationship(userId));
     }

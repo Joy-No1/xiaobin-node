@@ -11,9 +11,12 @@ import java.util.List;
 public interface RelationshipService {
 
     /**
-     * 发起情侣关系请求
+     * 发起关系请求
+     * @param userId 发起方用户ID
+     * @param targetUserId 接收方用户ID
+     * @param relationType 关系类型编码（关联字典 sys_dict_item，type_code=RELATION_TYPE）
      */
-    Relationship createRelationship(Long userId, Long targetUserId);
+    Relationship createRelationship(Long userId, Long targetUserId, String relationType);
 
     /**
      * 确认情侣关系
@@ -28,7 +31,7 @@ public interface RelationshipService {
     /**
      * 获取我的当前关系
      */
-    Relationship getMyRelationship(Long userId);
+    List<Relationship> getMyRelationship(Long userId);
 
     /**
      * 查看双方好感度
