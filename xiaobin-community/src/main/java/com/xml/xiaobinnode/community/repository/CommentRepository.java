@@ -20,4 +20,7 @@ public interface CommentRepository extends MongoRepository<Comment, String> {
 
     /** 获取帖子的所有评论人ID（去重） */
     List<Comment> findByPostId(String postId);
+
+    /** 获取某个用户的所有评论（时间倒序） */
+    List<Comment> findByUserIdOrderByCreatedAtDesc(Long userId);
 }

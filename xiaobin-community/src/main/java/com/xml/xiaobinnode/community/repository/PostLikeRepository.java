@@ -18,4 +18,7 @@ public interface PostLikeRepository extends MongoRepository<PostLike, String> {
 
     /** 获取帖子的所有点赞 */
     List<PostLike> findByPostId(String postId);
+
+    /** 获取某个用户的所有点赞（时间倒序） */
+    List<PostLike> findByUserIdOrderByCreatedAtDesc(Long userId);
 }

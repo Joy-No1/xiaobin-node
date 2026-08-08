@@ -15,6 +15,9 @@ import com.xml.xiaobinnode.community.document.Notification;
 import com.xml.xiaobinnode.community.document.Post;
 import com.xml.xiaobinnode.community.document.PostLike;
 import com.xml.xiaobinnode.community.dto.CommentVO;
+import com.xml.xiaobinnode.community.dto.MyCommentVO;
+import com.xml.xiaobinnode.community.dto.MyFollowVO;
+import com.xml.xiaobinnode.community.dto.MyLikeVO;
 import com.xml.xiaobinnode.community.dto.PostVO;
 import com.xml.xiaobinnode.community.entity.Follow;
 import com.xml.xiaobinnode.community.mapper.FollowMapper;
@@ -506,6 +509,106 @@ public class CommunityServiceImpl implements CommunityService {
         }
 
         return dto;
+    }
+
+    @Override
+    public List<MyFollowVO> getMyFollowing(Long userId) {
+        LambdaQueryWrapper<Follow> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(Follow::getFollowerId, userId)
+                .orderByDesc(Follow::getCreatedAt);
+        List<Follow> follows = followMapper.selectList(wrapper);
+        if (follows.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        List<Long> followeeIds = follows.stream().map(Follow::getFolloweeId).collect(Collectors.toList());
+        Map<Long, UserVO> userMap = fetchUserVOMap(followeeIds);
+
+        // 批量查反向关系：哪些被关注者也在关注我（互关）
+        Set<Long> mutualIds = new HashSet<>();
+        LambdaQueryWrapper<Follow> reverseWrapper = new LambdaQueryWrapper<>();
+        reverseWrapper.in(Follow::getFollowerId, followeeIds)
+                .eq(Follow::getFolloweeId, userId);
+        List<Follow> reverseFollows = followMapper.selectList(reverseWrapper);
+        reverseFollows.forEach(f -> mutualIds.add(f.getFollowerId()));
+
+        List<MyFollowVO> result = new ArrayList<>();
+        for (Follow f : follows) {
+            MyFollowVO vo = new MyFollowVO();
+            vo.setUser(userMap.get(f.getFolloweeId()));
+            vo.setIsMutual(mutualIds.contains(f.getFolloweeId()));
+            vo.setFollowedAt(f.getCreatedAt());
+            result.add(vo);
+        }
+        return result;
+    }
+
+    @Override
+    public List<MyLikeVO> getMyLikes(Long userId) {
+        List<PostLike> likes = postLikeRepository.findByUserIdOrderByCreatedAtDesc(userId);
+        if (likes.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        List<String> postIds = likes.stream().map(PostLike::getPostId).distinct().collect(Collectors.toList());
+        Map<String, Post> postMap = postRepository.findAllById(postIds).stream()
+                .collect(Collectors.toMap(Post::getId, p -> p));
+
+        List<Long> postUserIds = postMap.values().stream().map(Post::getUserId).distinct().collect(Collectors.toList());
+        Map<Long, UserVO> userMap = fetchUserVOMap(postUserIds);
+
+        List<MyLikeVO> result = new ArrayList<>();
+        for (PostLike like : likes) {
+            Post post = postMap.get(like.getPostId());
+            // 帖子已删除或不存在则跳过
+            if (post == null || !"ACTIVE".equals(post.getStatus())) {
+                continue;
+            }
+            MyLikeVO vo = new MyLikeVO();
+            vo.setPostId(post.getId());
+            vo.setPostUser(userMap.get(post.getUserId()));
+            vo.setContent(post.getContent());
+            vo.setImages(post.getImages());
+            vo.setLikeCount(post.getLikeCount());
+            vo.setCommentCount(post.getCommentCount());
+            vo.setIsEdited(post.getIsEdited() != null ? post.getIsEdited() : false);
+            vo.setPostCreatedAt(post.getCreatedAt());
+            vo.setLikedAt(like.getCreatedAt());
+            result.add(vo);
+        }
+        return result;
+    }
+
+    @Override
+    public List<MyCommentVO> getMyComments(Long userId) {
+        List<Comment> comments = commentRepository.findByUserIdOrderByCreatedAtDesc(userId);
+        if (comments.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        List<String> postIds = comments.stream().map(Comment::getPostId).distinct().collect(Collectors.toList());
+        Map<String, Post> postMap = postRepository.findAllById(postIds).stream()
+                .collect(Collectors.toMap(Post::getId, p -> p));
+
+        List<Long> postUserIds = postMap.values().stream().map(Post::getUserId).distinct().collect(Collectors.toList());
+        Map<Long, UserVO> userMap = fetchUserVOMap(postUserIds);
+
+        List<MyCommentVO> result = new ArrayList<>();
+        for (Comment c : comments) {
+            Post post = postMap.get(c.getPostId());
+            if (post == null) {
+                continue;
+            }
+            MyCommentVO vo = new MyCommentVO();
+            vo.setId(c.getId());
+            vo.setPostId(c.getPostId());
+            vo.setPostUser(userMap.get(post.getUserId()));
+            vo.setPostContent(post.getContent());
+            vo.setContent(c.getContent());
+            vo.setCreatedAt(c.getCreatedAt());
+            result.add(vo);
+        }
+        return result;
     }
 
     @Override

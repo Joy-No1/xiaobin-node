@@ -4,6 +4,9 @@ import com.xml.xiaobinnode.api.community.dto.FollowStatusDTO;
 import com.xml.xiaobinnode.common.dto.PageResult;
 import com.xml.xiaobinnode.community.document.Comment;
 import com.xml.xiaobinnode.community.document.Post;
+import com.xml.xiaobinnode.community.dto.MyCommentVO;
+import com.xml.xiaobinnode.community.dto.MyFollowVO;
+import com.xml.xiaobinnode.community.dto.MyLikeVO;
 import com.xml.xiaobinnode.community.dto.PostVO;
 import org.springframework.data.domain.Page;
 import org.springframework.web.multipart.MultipartFile;
@@ -44,6 +47,15 @@ public interface CommunityService {
 
     /** 获取当前用户对目标用户的关注状态 */
     FollowStatusDTO getFollowStatus(Long currentUserId, Long targetUserId);
+
+    /** 我的关注列表 */
+    List<MyFollowVO> getMyFollowing(Long userId);
+
+    /** 我的点赞帖子列表 */
+    List<MyLikeVO> getMyLikes(Long userId);
+
+    /** 我的评论列表 */
+    List<MyCommentVO> getMyComments(Long userId);
 
     // 文件上传
     String uploadFile(MultipartFile file);

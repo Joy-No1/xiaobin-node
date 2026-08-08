@@ -6,6 +6,9 @@ import com.xml.xiaobinnode.common.dto.Result;
 import com.xml.xiaobinnode.common.util.UserContext;
 import com.xml.xiaobinnode.community.document.Comment;
 import com.xml.xiaobinnode.community.document.Post;
+import com.xml.xiaobinnode.community.dto.MyCommentVO;
+import com.xml.xiaobinnode.community.dto.MyFollowVO;
+import com.xml.xiaobinnode.community.dto.MyLikeVO;
 import com.xml.xiaobinnode.community.dto.PostVO;
 import com.xml.xiaobinnode.community.service.CommunityService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -139,6 +142,29 @@ public class CommunityController {
     public Result<FollowStatusDTO> getFollowStatus(@PathVariable Long id) {
         Long userId = Long.valueOf(UserContext.getUserId());
         return Result.success(communityService.getFollowStatus(userId, id));
+    }
+
+    // ==================== 我的查询 ====================
+
+    @GetMapping("/me/following")
+    @Operation(summary = "我的关注", description = "获取我关注的人列表（含是否互关）")
+    public Result<List<MyFollowVO>> getMyFollowing() {
+        Long userId = Long.valueOf(UserContext.getUserId());
+        return Result.success(communityService.getMyFollowing(userId));
+    }
+
+    @GetMapping("/me/likes")
+    @Operation(summary = "我的点赞", description = "获取我点赞过的帖子列表")
+    public Result<List<MyLikeVO>> getMyLikes() {
+        Long userId = Long.valueOf(UserContext.getUserId());
+        return Result.success(communityService.getMyLikes(userId));
+    }
+
+    @GetMapping("/me/comments")
+    @Operation(summary = "我的评论", description = "获取我发表过的评论列表")
+    public Result<List<MyCommentVO>> getMyComments() {
+        Long userId = Long.valueOf(UserContext.getUserId());
+        return Result.success(communityService.getMyComments(userId));
     }
 
     // ==================== 文件上传 ====================

@@ -2,6 +2,9 @@ package com.xml.xiaobinnode.api.community;
 
 import com.xml.xiaobinnode.api.community.dto.CommentDTO;
 import com.xml.xiaobinnode.api.community.dto.FollowStatusDTO;
+import com.xml.xiaobinnode.api.community.dto.MyCommentDTO;
+import com.xml.xiaobinnode.api.community.dto.MyFollowDTO;
+import com.xml.xiaobinnode.api.community.dto.MyLikeDTO;
 import com.xml.xiaobinnode.api.community.dto.NotificationDTO;
 import com.xml.xiaobinnode.api.community.dto.PostDTO;
 import com.xml.xiaobinnode.common.dto.PageResult;
@@ -116,4 +119,18 @@ public interface CommunityFeignClient {
     @PutMapping("/notifications/{id}/read")
     Result<Void> markNotificationRead(@RequestHeader("X-User-Id") Long userId,
                                        @PathVariable("id") String notificationId);
+
+    // ==================== 我的查询 ====================
+
+    /** 我的关注列表 */
+    @GetMapping("/me/following")
+    Result<List<MyFollowDTO>> getMyFollowing(@RequestHeader("X-User-Id") Long userId);
+
+    /** 我的点赞帖子列表 */
+    @GetMapping("/me/likes")
+    Result<List<MyLikeDTO>> getMyLikes(@RequestHeader("X-User-Id") Long userId);
+
+    /** 我的评论列表 */
+    @GetMapping("/me/comments")
+    Result<List<MyCommentDTO>> getMyComments(@RequestHeader("X-User-Id") Long userId);
 }

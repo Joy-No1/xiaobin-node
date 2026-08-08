@@ -358,6 +358,67 @@
 
 ---
 
+### 我的关注 `GET /api/v1/me/following`
+
+**响应：** `data` 为关注列表数组：
+
+```json
+[
+  {
+    "user": { "id": 2, "nickname": "小红", "avatarUrl": "..." },
+    "isMutual": true,
+    "followedAt": "2026-01-01T12:00:00"
+  }
+]
+```
+
+| 字段 | 说明 |
+|------|------|
+| `user` | 被关注用户信息（UserVO） |
+| `isMutual` | 是否互相关注 |
+| `followedAt` | 关注时间 |
+
+### 我的点赞 `GET /api/v1/me/likes`
+
+**响应：** `data` 为我点赞过的帖子列表：
+
+```json
+[
+  {
+    "postId": "64f1a2b3...",
+    "postUser": { "id": 1, "nickname": "小斌", "avatarUrl": "..." },
+    "content": "帖子内容",
+    "images": ["http://..."],
+    "likeCount": 10,
+    "commentCount": 3,
+    "isEdited": false,
+    "postCreatedAt": "2026-01-01T10:00:00",
+    "likedAt": "2026-01-02T10:00:00"
+  }
+]
+```
+
+> 已删除的帖子会被过滤掉。
+
+### 我的评论 `GET /api/v1/me/comments`
+
+**响应：** `data` 为我发表过的评论列表：
+
+```json
+[
+  {
+    "id": "comment-id",
+    "postId": "64f1a2b3...",
+    "postUser": { "id": 1, "nickname": "小斌", "avatarUrl": "..." },
+    "postContent": "帖子内容摘要",
+    "content": "评论内容",
+    "createdAt": "2026-01-01T12:00:00"
+  }
+]
+```
+
+---
+
 ## 四、聊天模块
 
 ### 会话列表 `GET /api/v1/chat/conversations`
@@ -549,7 +610,10 @@ com.xml.xiaobinnode.api
 │   │   ├── PostDTO.java
 │   │   ├── CommentDTO.java
 │   │   ├── NotificationDTO.java
-│   │   └── FollowStatusDTO.java
+│   │   ├── FollowStatusDTO.java
+│   │   ├── MyFollowDTO.java
+│   │   ├── MyLikeDTO.java
+│   │   └── MyCommentDTO.java
 │   └── CommunityFeignClient.java
 └── chat/          # 聊天服务
     ├── dto/       # 聊天相关DTO
@@ -606,6 +670,9 @@ com.xml.xiaobinnode.api
 | `getNotifications` | `GET /api/v1/notifications` | 通知列表（分页，返回 NotificationDTO） |
 | `getUnreadCount` | `GET /api/v1/notifications/unread-count` | 未读通知数 |
 | `markNotificationRead` | `PUT /api/v1/notifications/{id}/read` | 标记通知已读 |
+| `getMyFollowing` | `GET /api/v1/me/following` | 我的关注列表（返回 MyFollowDTO） |
+| `getMyLikes` | `GET /api/v1/me/likes` | 我的点赞帖子列表（返回 MyLikeDTO） |
+| `getMyComments` | `GET /api/v1/me/comments` | 我的评论列表（返回 MyCommentDTO） |
 
 > 文件上传接口（`/files/upload`）不通过 Feign 暴露，使用 `MultipartFile` 需直接调用。
 

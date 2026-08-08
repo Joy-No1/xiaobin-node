@@ -26,7 +26,7 @@ public class GatewayConfig {
                         .path("/api/v1/relationships/**")
                         .uri("lb://xiaobin-relationship"))
                 .route("xiaobin-community", r -> r
-                        .path("/api/v1/posts/**", "/api/v1/comments/**", "/api/v1/files/**", "/api/v1/notifications/**")
+                        .path("/api/v1/posts/**", "/api/v1/comments/**", "/api/v1/files/**", "/api/v1/notifications/**", "/api/v1/me/**")
                         .uri("lb://xiaobin-community"))
                 .route("xiaobin-chat", r -> r
                         .path("/api/v1/chat/**")
