@@ -1,7 +1,10 @@
 package com.xml.xiaobinnode.community.service;
 
+import com.xml.xiaobinnode.api.community.dto.FollowStatusDTO;
+import com.xml.xiaobinnode.common.dto.PageResult;
 import com.xml.xiaobinnode.community.document.Comment;
 import com.xml.xiaobinnode.community.document.Post;
+import com.xml.xiaobinnode.community.dto.PostVO;
 import org.springframework.data.domain.Page;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -14,6 +17,15 @@ public interface CommunityService {
     Post getPostById(String postId);
     Page<Post> getPostList(int page, int size);
     void deletePost(String postId, Long userId);
+
+    /** 编辑帖子（仅作者可操作），编辑后标记 isEdited=true */
+    Post editPost(String postId, Long userId, String content, List<String> images, String location);
+
+    /** 获取帖子详情VO（含点赞人、评论人） */
+    PostVO getPostVOById(String postId, Long currentUserId);
+
+    /** 获取帖子列表VO（含点赞人、评论人、分页信息） */
+    PageResult<PostVO> getPostVOList(int page, int size, Long currentUserId);
 
     // 点赞
     void likePost(String postId, Long userId);
@@ -29,6 +41,9 @@ public interface CommunityService {
     void follow(Long followerId, Long followeeId);
     void unfollow(Long followerId, Long followeeId);
     boolean isMutualFollow(Long userId1, Long userId2);
+
+    /** 获取当前用户对目标用户的关注状态 */
+    FollowStatusDTO getFollowStatus(Long currentUserId, Long targetUserId);
 
     // 文件上传
     String uploadFile(MultipartFile file);

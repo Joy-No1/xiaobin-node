@@ -40,4 +40,7 @@ public interface CommonConstants {
 
     /** Redis Key - 互关用户 */
     String REDIS_MUTUAL_FOLLOW_KEY = "mutual_follow:";
+
+    /** Redis Pub/Sub Channel - 关注通知 */
+    String REDIS_CHANNEL_FOLLOW_NOTIFICATION = "follow:notification";
 }

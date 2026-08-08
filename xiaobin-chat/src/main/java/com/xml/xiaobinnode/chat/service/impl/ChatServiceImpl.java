@@ -51,6 +51,22 @@ public class ChatServiceImpl implements ChatService {
     }
 
     @Override
+    public ChatMessage sendMessageByConversation(Long conversationId, Long senderId, String content) {
+        Conversation conversation = conversationMapper.selectById(conversationId);
+        if (conversation == null) {
+            throw new BusinessException("会话不存在");
+        }
+        // 校验发送者属于该会话
+        if (!conversation.getUser1Id().equals(senderId) && !conversation.getUser2Id().equals(senderId)) {
+            throw new BusinessException("无权在该会话发送消息");
+        }
+        // 由会话推断接收方
+        Long receiverId = conversation.getUser1Id().equals(senderId)
+                ? conversation.getUser2Id() : conversation.getUser1Id();
+        return sendMessage(senderId, receiverId, content, "TEXT");
+    }
+
+    @Override
     public Conversation getOrCreateConversation(Long user1Id, Long user2Id) {
         long small = Math.min(user1Id, user2Id);
         long large = Math.max(user1Id, user2Id);

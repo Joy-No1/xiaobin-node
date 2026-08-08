@@ -1,10 +1,12 @@
 package com.xml.xiaobinnode.community.controller;
 
+import com.xml.xiaobinnode.api.community.dto.FollowStatusDTO;
 import com.xml.xiaobinnode.common.dto.PageResult;
 import com.xml.xiaobinnode.common.dto.Result;
 import com.xml.xiaobinnode.common.util.UserContext;
 import com.xml.xiaobinnode.community.document.Comment;
 import com.xml.xiaobinnode.community.document.Post;
+import com.xml.xiaobinnode.community.dto.PostVO;
 import com.xml.xiaobinnode.community.service.CommunityService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -35,21 +37,28 @@ public class CommunityController {
     }
 
     @GetMapping("/posts")
-    @Operation(summary = "帖子列表", description = "分页获取广场帖子列表")
-    public Result<PageResult<Post>> getPostList(@RequestParam(defaultValue = "1") int page,
-                                                 @RequestParam(defaultValue = "10") int size) {
-        Page<Post> postPage = communityService.getPostList(page, size);
-        return Result.success(PageResult.of(page, size, postPage.getTotalElements(), postPage.getContent()));
+    @Operation(summary = "帖子列表", description = "分页获取广场帖子列表（含点赞人、评论人）")
+    public Result<PageResult<PostVO>> getPostList(@RequestParam(defaultValue = "1") int page,
+                                                   @RequestParam(defaultValue = "10") int size) {
+        Long userId = Long.valueOf(UserContext.getUserId());
+        return Result.success(communityService.getPostVOList(page, size, userId));
     }
 
     @GetMapping("/posts/{id}")
-    @Operation(summary = "帖子详情")
-    public Result<Post> getPost(@PathVariable String id) {
-        Post post = communityService.getPostById(id);
+    @Operation(summary = "帖子详情", description = "获取帖子详情（含点赞人、评论人、是否被编辑）")
+    public Result<PostVO> getPost(@PathVariable String id) {
         Long userId = Long.valueOf(UserContext.getUserId());
-        boolean liked = communityService.isLiked(id, userId);
-        // 扩展字段 (可用HashMap代替)
-        return Result.success(post);
+        return Result.success(communityService.getPostVOById(id, userId));
+    }
+
+    @PutMapping("/posts/{id}")
+    @Operation(summary = "编辑帖子", description = "编辑帖子内容（仅作者可操作），编辑后标记 isEdited=true")
+    public Result<Post> editPost(@PathVariable String id,
+                                  @RequestParam(required = false) String content,
+                                  @RequestParam(required = false) List<String> images,
+                                  @RequestParam(required = false) String location) {
+        Long userId = Long.valueOf(UserContext.getUserId());
+        return Result.success(communityService.editPost(id, userId, content, images, location));
     }
 
     @DeleteMapping("/posts/{id}")
@@ -123,6 +132,13 @@ public class CommunityController {
         Long userId = Long.valueOf(UserContext.getUserId());
         communityService.unfollow(userId, id);
         return Result.success();
+    }
+
+    @GetMapping("/users/{id}/follow-status")
+    @Operation(summary = "查询关注状态", description = "查询当前用户对指定用户的关注状态（是否关注、是否被关注、互关）")
+    public Result<FollowStatusDTO> getFollowStatus(@PathVariable Long id) {
+        Long userId = Long.valueOf(UserContext.getUserId());
+        return Result.success(communityService.getFollowStatus(userId, id));
     }
 
     // ==================== 文件上传 ====================

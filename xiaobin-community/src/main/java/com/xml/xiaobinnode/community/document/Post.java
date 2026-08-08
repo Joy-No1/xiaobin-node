@@ -29,6 +29,9 @@ public class Post {
 
     private Integer commentCount = 0;
 
+    /** 是否被编辑过 */
+    private Boolean isEdited = false;
+
     /** ACTIVE / DELETED */
     private String status = "ACTIVE";
 

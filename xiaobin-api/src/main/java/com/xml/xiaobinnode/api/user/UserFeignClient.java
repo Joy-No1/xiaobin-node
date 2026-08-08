@@ -1,12 +1,11 @@
 package com.xml.xiaobinnode.api.user;
 
 import com.xml.xiaobinnode.common.dto.Result;
+import com.xml.xiaobinnode.common.dto.UserVO;
 import org.springframework.cloud.openfeign.FeignClient;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.*;
 
-import java.util.Map;
+import java.util.List;
 
 /**
  * 用户服务 Feign 接口
@@ -14,9 +13,19 @@ import java.util.Map;
 @FeignClient(name = "xiaobin-user", path = "/api/v1/users")
 public interface UserFeignClient {
 
-    @GetMapping("/{id}")
-    Result<Map<String, Object>> getUserById(@PathVariable("id") Long userId);
+    /** 获取当前用户信息（需传X-User-Id头） */
+    @GetMapping("/me")
+    Result<UserVO> getCurrentUser(@RequestHeader("X-User-Id") Long userId);
 
+    /** 根据ID获取用户 */
+    @GetMapping("/{id}")
+    Result<UserVO> getUserById(@PathVariable("id") Long userId);
+
+    /** 根据手机号查找用户 */
+    @GetMapping("/search")
+    Result<UserVO> searchByPhone(@RequestParam("phone") String phone);
+
+    /** 批量获取用户信息，ids用逗号分隔 */
     @GetMapping("/batch")
-    Result<Map<Long, Map<String, Object>>> getUsersByIds(@RequestParam("ids") String ids);
+    Result<List<UserVO>> getUsersByIds(@RequestParam("ids") String ids);
 }

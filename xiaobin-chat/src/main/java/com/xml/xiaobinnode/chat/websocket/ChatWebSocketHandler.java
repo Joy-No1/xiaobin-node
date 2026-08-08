@@ -164,4 +164,20 @@ public class ChatWebSocketHandler extends SimpleChannelInboundHandler<TextWebSoc
     private void sendError(ChannelHandlerContext ctx, String errorMsg) {
         sendMessage(ctx, Map.of("type", "ERROR", "message", errorMsg));
     }
+
+    /**
+     * 向指定在线用户推送消息（供 Redis 订阅者等外部组件调用）
+     *
+     * @param userId      目标用户ID
+     * @param jsonMessage JSON格式的消息字符串
+     * @return true=用户在线且消息已发送，false=用户离线
+     */
+    public static boolean pushToUser(Long userId, String jsonMessage) {
+        Channel channel = USER_CHANNEL_MAP.get(userId);
+        if (channel != null && channel.isActive()) {
+            channel.writeAndFlush(new TextWebSocketFrame(jsonMessage));
+            return true;
+        }
+        return false;
+    }
 }
