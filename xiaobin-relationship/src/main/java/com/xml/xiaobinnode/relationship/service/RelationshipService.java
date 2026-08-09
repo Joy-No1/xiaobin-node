@@ -2,6 +2,7 @@ package com.xml.xiaobinnode.relationship.service;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.xml.xiaobinnode.relationship.entity.*;
+import com.xml.xiaobinnode.relationship.vo.RelationshipVO;
 
 import java.util.List;
 
@@ -31,7 +32,7 @@ public interface RelationshipService {
     /**
      * 获取我的当前关系
      */
-    List<Relationship> getMyRelationship(Long userId);
+    List<RelationshipVO> getMyRelationship(Long userId);
 
     /**
      * 查看双方好感度

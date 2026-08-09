@@ -3,6 +3,7 @@ package com.xml.xiaobinnode.relationship.controller;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.xml.xiaobinnode.common.dto.Result;
 import com.xml.xiaobinnode.common.util.UserContext;
+import com.xml.xiaobinnode.relationship.vo.RelationshipVO;
 import com.xml.xiaobinnode.relationship.entity.*;
 import com.xml.xiaobinnode.relationship.service.RelationshipService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -62,7 +63,7 @@ public class RelationshipController {
 
     @GetMapping("/me")
     @Operation(summary = "获取我的关系", description = "获取当前登录用户的已确认关系")
-    public Result<List<Relationship>> getMyRelationship() {
+    public Result<List<RelationshipVO>> getMyRelationship() {
         Long userId = Long.valueOf(UserContext.getUserId());
         return Result.success(relationshipService.getMyRelationship(userId));
     }

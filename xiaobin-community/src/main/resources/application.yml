@@ -17,6 +17,9 @@ spring:
     import:
       - nacos:common-config.yaml?group=DEFAULT_GROUP&namespace=xiaobin
       - nacos:xiaobin-community.yaml?group=DEFAULT_GROUP&namespace=xiaobin
+  servlet:
+    multipart:
+      max-file-size: 100MB
 
 mybatis-plus:
   configuration:
@@ -24,7 +27,6 @@ mybatis-plus:
   global-config:
     db-config:
       id-type: auto
-
 springdoc:
   swagger-ui:
     path: /swagger-ui.html

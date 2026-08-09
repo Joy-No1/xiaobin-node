@@ -3,19 +3,24 @@ package com.xml.xiaobinnode.relationship.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.conditions.query.LambdaQueryChainWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.xml.xiaobinnode.api.user.UserFeignClient;
 import com.xml.xiaobinnode.common.constant.CommonConstants;
+import com.xml.xiaobinnode.common.dto.Result;
+import com.xml.xiaobinnode.common.dto.UserVO;
 import com.xml.xiaobinnode.common.exception.BusinessException;
 import com.xml.xiaobinnode.relationship.constans.RelationEnum;
 import com.xml.xiaobinnode.relationship.entity.*;
 import com.xml.xiaobinnode.relationship.mapper.*;
 import com.xml.xiaobinnode.relationship.service.RelationshipService;
+import com.xml.xiaobinnode.relationship.vo.RelationshipVO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Date;
-import java.util.List;
+import java.util.*;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -26,6 +31,7 @@ public class RelationshipServiceImpl implements RelationshipService {
     private final ScoreMapper scoreMapper;
     private final ScoreItemMapper scoreItemMapper;
     private final ScoreRecordMapper scoreRecordMapper;
+    private final UserFeignClient userFeignClient;
 
     @Override
     @Transactional
@@ -37,9 +43,9 @@ public class RelationshipServiceImpl implements RelationshipService {
         // 检查对方是否已有关系
         LambdaQueryWrapper<Relationship> targetWrapper = new LambdaQueryWrapper<>();
         targetWrapper.and(w -> w
-                .eq(Relationship::getInitiatorId, targetUserId)
-                .or()
-                .eq(Relationship::getReceiverId, targetUserId))
+                        .eq(Relationship::getInitiatorId, targetUserId)
+                        .or()
+                        .eq(Relationship::getReceiverId, targetUserId))
                 .eq(Relationship::getStatus, "CONFIRMED");
         if (relationshipMapper.selectCount(targetWrapper) > 0) {
             throw new BusinessException("对方已有情侣关系");
@@ -48,9 +54,9 @@ public class RelationshipServiceImpl implements RelationshipService {
         // 检查发起方是否已有关系
         LambdaQueryWrapper<Relationship> myWrapper = new LambdaQueryWrapper<>();
         myWrapper.and(w -> w
-                .eq(Relationship::getInitiatorId, userId)
-                .or()
-                .eq(Relationship::getReceiverId, userId))
+                        .eq(Relationship::getInitiatorId, userId)
+                        .or()
+                        .eq(Relationship::getReceiverId, userId))
                 .eq(Relationship::getStatus, "CONFIRMED");
         if (relationshipMapper.selectCount(myWrapper) > 0) {
             throw new BusinessException("你已有情侣关系");
@@ -142,11 +148,31 @@ public class RelationshipServiceImpl implements RelationshipService {
     }
 
     @Override
-    public List<Relationship> getMyRelationship(Long userId) {
+    public List<RelationshipVO> getMyRelationship(Long userId) {
         LambdaQueryWrapper<Relationship> wrapper = new LambdaQueryWrapper<>();
         wrapper.and(w -> w.eq(Relationship::getInitiatorId, userId).or().eq(Relationship::getReceiverId, userId))
                 .eq(Relationship::getStatus, "CONFIRMED");
-        return relationshipMapper.selectList(wrapper);
+        List<Relationship> relationshipList = relationshipMapper.selectList(wrapper);
+        Set<Long> userIds = new HashSet<>();
+        relationshipList.forEach(item -> userIds.add(item.getInitiatorId()));
+        relationshipList.forEach(item -> userIds.add(item.getReceiverId()));
+        userIds.remove(userId);
+        Result<List<UserVO>> userResult = userFeignClient.getUsersByIds(userIds.stream().toList());
+        Map<Long, UserVO> userVOMap = Optional.ofNullable(userResult.getData()).orElse(new ArrayList<>())
+                .stream().collect(Collectors.toMap(UserVO::getId, Function.identity(), (a, b) -> a));
+        return relationshipList.stream().map(relationship -> {
+            RelationshipVO relationshipVO = new RelationshipVO();
+            Long otherId = -1L;
+            if (relationship.getInitiatorId().equals(userId)) {
+                otherId = relationship.getReceiverId();
+            } else if (relationship.getReceiverId().equals(userId)) {
+                otherId = relationship.getInitiatorId();
+            }
+            UserVO userVO = userVOMap.getOrDefault(otherId, new UserVO());
+            relationshipVO.setRelationship(relationship);
+            relationshipVO.setUserVO(userVO);
+            return relationshipVO;
+        }).collect(Collectors.toList());
     }
 
     @Override
@@ -299,7 +325,7 @@ public class RelationshipServiceImpl implements RelationshipService {
     @Override
     public List<Relationship> getReceived(Long userId) {
         return new LambdaQueryChainWrapper<>(relationshipMapper)
-                .eq(Relationship::getReceiverId,userId)
+                .eq(Relationship::getReceiverId, userId)
                 .eq(Relationship::getStatus, RelationEnum.PENDING.getCode())
                 .list();
     }
@@ -307,7 +333,7 @@ public class RelationshipServiceImpl implements RelationshipService {
     @Override
     public List<Relationship> getSent(Long userId) {
         return new LambdaQueryChainWrapper<>(relationshipMapper)
-                .eq(Relationship::getInitiatorId,userId)
+                .eq(Relationship::getInitiatorId, userId)
                 .eq(Relationship::getStatus, RelationEnum.PENDING.getCode())
                 .list();
     }
