@@ -53,10 +53,13 @@ public class ChatController {
     }
 
     @PostMapping("/conversations/{id}/messages")
-    @Operation(summary = "发送消息", description = "在指定会话发送消息，接收方由会话自动推断")
-    public Result<ChatMessage> sendMessage(@PathVariable String id, @RequestParam String content) {
+    @Operation(summary = "发送消息", description = "在指定会话发送消息，接收方由会话自动推断。messageType可选：TEXT文字/IMAGE图片/VOICE语音/EMOJI表情，默认TEXT；语音需传duration时长（秒）")
+    public Result<ChatMessage> sendMessage(@PathVariable String id,
+                                           @RequestParam String content,
+                                           @RequestParam(required = false, defaultValue = "TEXT") String messageType,
+                                           @RequestParam(required = false) Integer duration) {
         Long userId = Long.valueOf(UserContext.getUserId());
-        return Result.success(chatService.sendMessageByConversation(Long.valueOf(id), userId, content));
+        return Result.success(chatService.sendMessageByConversation(Long.valueOf(id), userId, content, messageType, duration));
     }
 
     @PutMapping("/conversations/{id}/read")

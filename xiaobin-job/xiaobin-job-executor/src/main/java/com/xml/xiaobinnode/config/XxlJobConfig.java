@@ -25,6 +25,9 @@ public class XxlJobConfig {
     @Value("${xxl.job.accessToken:}")
     private String accessToken;
 
+    @Value("${xxl.job.executor.logpath:./logs/xxl-job}")
+    private String logPath;
+
     @Bean
     public XxlJobSpringExecutor xxlJobExecutor() {
         log.info("XXL-Job 执行器启动: appName={}, adminAddress={}", appName, adminAddresses);
@@ -33,6 +36,7 @@ public class XxlJobConfig {
         executor.setAppname(appName);
         executor.setPort(port);
         executor.setAccessToken(accessToken);
+        executor.setLogPath(logPath);
         return executor;
     }
 }

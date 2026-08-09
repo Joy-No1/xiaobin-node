@@ -27,7 +27,7 @@ public class ChatServiceImpl implements ChatService {
     private final RedisTemplate<String, String> redisTemplate;
 
     @Override
-    public ChatMessage sendMessage(Long senderId, Long receiverId, String content, String messageType) {
+    public ChatMessage sendMessage(Long senderId, Long receiverId, String content, String messageType, Integer duration) {
         if (!isMutualFollow(senderId, receiverId)) {
             throw new BusinessException("仅互相关注的用户才能聊天");
         }
@@ -40,10 +40,11 @@ public class ChatServiceImpl implements ChatService {
         message.setReceiverId(receiverId);
         message.setContent(content);
         message.setMessageType(messageType != null ? messageType : "TEXT");
+        message.setDuration(duration);
         message.setIsRead(0);
         messageMapper.insert(message);
 
-        conversation.setLastMessage(content.length() > 50 ? content.substring(0, 50) + "..." : content);
+        conversation.setLastMessage(buildPreview(message));
         conversation.setLastMessageTime(new Date());
         conversationMapper.updateById(conversation);
 
@@ -51,7 +52,7 @@ public class ChatServiceImpl implements ChatService {
     }
 
     @Override
-    public ChatMessage sendMessageByConversation(Long conversationId, Long senderId, String content) {
+    public ChatMessage sendMessageByConversation(Long conversationId, Long senderId, String content, String messageType, Integer duration) {
         Conversation conversation = conversationMapper.selectById(conversationId);
         if (conversation == null) {
             throw new BusinessException("会话不存在");
@@ -63,7 +64,23 @@ public class ChatServiceImpl implements ChatService {
         // 由会话推断接收方
         Long receiverId = conversation.getUser1Id().equals(senderId)
                 ? conversation.getUser2Id() : conversation.getUser1Id();
-        return sendMessage(senderId, receiverId, content, "TEXT");
+        return sendMessage(senderId, receiverId, content, messageType, duration);
+    }
+
+    /**
+     * 构造会话列表展示的最后一条消息预览
+     * 图片/语音等非文本消息不展示原始URL
+     */
+    private String buildPreview(ChatMessage message) {
+        String preview;
+        if ("IMAGE".equals(message.getMessageType())) {
+            preview = "[图片]";
+        } else if ("VOICE".equals(message.getMessageType())) {
+            preview = "[语音]";
+        } else {
+            preview = message.getContent();
+        }
+        return preview.length() > 50 ? preview.substring(0, 50) + "..." : preview;
     }
 
     @Override

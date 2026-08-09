@@ -102,9 +102,10 @@ public class ChatWebSocketHandler extends SimpleChannelInboundHandler<TextWebSoc
         Long receiverId = Long.valueOf(msg.get("receiverId").toString());
         String content = (String) msg.get("content");
         String messageType = (String) msg.getOrDefault("messageType", "TEXT");
+        Integer duration = msg.get("duration") != null ? Integer.valueOf(msg.get("duration").toString()) : null;
 
         try {
-            ChatMessage chatMessage = chatService.sendMessage(senderId, receiverId, content, messageType);
+            ChatMessage chatMessage = chatService.sendMessage(senderId, receiverId, content, messageType, duration);
 
             // 发送确认给发送者
             sendMessage(ctx, Map.of(
@@ -122,6 +123,7 @@ public class ChatWebSocketHandler extends SimpleChannelInboundHandler<TextWebSoc
                         "senderId", senderId,
                         "content", content,
                         "messageType", messageType,
+                        "duration", duration,
                         "createdAt", chatMessage.getCreatedAt().toString()
                 ));
             }

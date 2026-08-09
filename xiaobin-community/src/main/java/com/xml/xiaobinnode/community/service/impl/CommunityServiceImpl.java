@@ -58,10 +58,7 @@ public class CommunityServiceImpl implements CommunityService {
     private final RedisTemplate<String, String> redisTemplate;
     private final StringRedisTemplate stringRedisTemplate;
     private final NotificationService notificationService;
-
-    @Autowired
-    @Lazy
-    private UserFeignClient userFeignClient;
+    private final UserFeignClient userFeignClient;
 
     @Value("${minio.bucket:xiaobin}")
     private String bucketName;
@@ -256,8 +253,7 @@ public class CommunityServiceImpl implements CommunityService {
             return Collections.emptyList();
         }
         try {
-            String ids = userIds.stream().map(String::valueOf).collect(Collectors.joining(","));
-            Result<List<UserVO>> result = userFeignClient.getUsersByIds(ids);
+            Result<List<UserVO>> result = userFeignClient.getUsersByIds(userIds);
             if (result != null && result.getCode() == 200 && result.getData() != null) {
                 return result.getData();
             }

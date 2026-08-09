@@ -111,8 +111,7 @@ public class NotificationServiceImpl implements NotificationService {
             return Collections.emptyList();
         }
         try {
-            String ids = userIds.stream().map(String::valueOf).collect(Collectors.joining(","));
-            Result<List<UserVO>> result = userFeignClient.getUsersByIds(ids);
+            Result<List<UserVO>> result = userFeignClient.getUsersByIds(userIds);
             if (result != null && result.getCode() == 200 && result.getData() != null) {
                 return result.getData();
             }

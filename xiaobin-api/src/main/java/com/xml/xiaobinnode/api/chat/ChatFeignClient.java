@@ -30,11 +30,13 @@ public interface ChatFeignClient {
                                                     @RequestParam(value = "page", defaultValue = "1") int page,
                                                     @RequestParam(value = "size", defaultValue = "20") int size);
 
-    /** 发送消息（接收方由会话自动推断） */
+    /** 发送消息（接收方由会话自动推断，messageType 默认 TEXT，VOICE 需传 duration） */
     @PostMapping("/conversations/{id}/messages")
     Result<ChatMessageDTO> sendMessage(@RequestHeader("X-User-Id") Long userId,
                                         @PathVariable("id") String conversationId,
-                                        @RequestParam("content") String content);
+                                        @RequestParam("content") String content,
+                                        @RequestParam(value = "messageType", required = false, defaultValue = "TEXT") String messageType,
+                                        @RequestParam(value = "duration", required = false) Integer duration);
 
     /** 标记已读 */
     @PutMapping("/conversations/{id}/read")

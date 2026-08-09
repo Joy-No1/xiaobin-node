@@ -223,6 +223,19 @@ public class UserServiceImpl implements UserService {
             return Collections.emptyList();
         }
         List<User> users = userMapper.selectBatchIds(userIds);
+        users.forEach(user -> {
+            user.setPassword(null);
+            user.setPhone(null);
+            user.setCreatedAt(null);
+            user.setUpdatedAt(null);
+            user.setCompany(null);
+            user.setSchool(null);
+            user.setHeight(null);
+            user.setWeight(null);
+            user.setEducation(null);
+            user.setBirthday(null);
+            user.setEmail(null);
+        });
         return users.stream().map(this::toUserVO).collect(Collectors.toList());
     }
 

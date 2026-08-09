@@ -3,6 +3,8 @@ package com.xml.xiaobinnode.entity;
 import com.baomidou.mybatisplus.annotation.*;
 import lombok.Data;
 
+import java.io.Serial;
+import java.io.Serializable;
 import java.util.Date;
 
 /**
@@ -10,7 +12,7 @@ import java.util.Date;
  */
 @Data
 @TableName("user")
-public class User {
+public class User implements Serializable {
 
     @TableId(type = IdType.AUTO)
     private Long id;
@@ -68,4 +70,8 @@ public class User {
 
     @TableField(fill = FieldFill.INSERT_UPDATE)
     private Date updatedAt;
+
+    @Serial
+    @TableField(exist = false)
+    private static final long serialVersionUID = 1L;
 }

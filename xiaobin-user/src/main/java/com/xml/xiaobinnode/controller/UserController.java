@@ -59,14 +59,9 @@ public class UserController {
         return Result.success(userService.getUserVOById(user.getId()));
     }
 
-    @GetMapping("/batch")
-    @Operation(summary = "批量获取用户信息", description = "根据用户ID批量获取用户信息，ids用逗号分隔")
-    public Result<List<UserVO>> getUsersByIds(@RequestParam String ids) {
-        List<Long> userIds = Arrays.stream(ids.split(","))
-                .map(String::trim)
-                .filter(s -> !s.isEmpty())
-                .map(Long::valueOf)
-                .collect(Collectors.toList());
+    @PostMapping("/batch")
+    @Operation(summary = "批量获取用户信息", description = "根据用户ID批量获取用户信息")
+    public Result<List<UserVO>> getUsersByIds(@RequestBody List<Long> userIds) {
         return Result.success(userService.getUserVOsByIds(userIds));
     }
 }

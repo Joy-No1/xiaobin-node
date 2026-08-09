@@ -94,7 +94,7 @@
 
 ### 我的信息 `GET /api/v1/users/me`
 
-**响应：** `data` 为扁平化用户对象（含地址信息 province/city/district），格式见 [用户对象结构](#五用户对象结构)
+**响应：** `data` 为扁平化用户对象（含地址信息 province/city/district），格式见 [用户对象结构](#六用户对象结构)
 
 ### 编辑资料 `PUT /api/v1/users/me`
 
@@ -150,9 +150,16 @@
 
 > 用于发起关系前查找对方。返回扁平化用户对象，不存在返回 404。
 
-### 批量获取用户 `GET /api/v1/users/batch?ids=1,2,3`
+### 批量获取用户 `POST /api/v1/users/batch`
 
-> 根据用户ID批量获取用户信息，ids 用逗号分隔。返回用户对象数组。
+> ⚠️ 已从 `GET ?ids=` 改为 `POST` + JSON 数组请求体。根据用户ID批量获取用户信息，返回用户对象数组。
+
+**请求体（JSON 数组）：**
+```json
+[1, 2, 3]
+```
+
+**响应：** `data` 为用户对象数组。
 
 ### 行政区查询 `GET /region` / `GET /region/children?parentCode=`
 
@@ -162,10 +169,106 @@
 
 ---
 
-## 二、关系模块
+## 二、字典模块
 
-### 发起关系 `POST /api/v1/relationships?targetUserId=2`
+> 通用字典表，位于 `xiaobin_user` 库（`sys_dict_type` 字典类型表 / `sys_dict_item` 字典项表），支持按类型编码查询字典项。
+> 以后新增其他字典（学历、职业等）时，直接往 `sys_dict_item` 插入数据即可，无需改代码。
+> ⚡无需登录
 
+### 查询字典项 `GET /api/v1/dict/items?typeCode=RELATION_TYPE` ⭐新增
+
+> 传 `typeCode` 时只返回该类型下 `ACTIVE` 的字典项（按 `sortOrder` 升序）；不传 `typeCode` 时返回全部字典项（含禁用，用于后台管理）。
+
+**响应：** `data` 为字典项数组：
+
+```json
+[
+  {
+    "id": 1,
+    "typeCode": "RELATION_TYPE",
+    "itemCode": "COUPLE",
+    "itemName": "情侣",
+    "description": "恋爱关系",
+    "sortOrder": 1,
+    "status": "ACTIVE",
+    "createdAt": "2026-08-08T00:00:00",
+    "updatedAt": "2026-08-08T00:00:00"
+  }
+]
+```
+
+> 前端发起关系时用此接口填充「关系类型」下拉框，返回的 `itemCode` 作为 `POST /api/v1/relationships?relationType=` 的参数值。
+
+**预置关系类型（typeCode=RELATION_TYPE）：**
+
+| itemCode | itemName | 说明 |
+|----------|----------|------|
+| `COUPLE` | 情侣 | 恋爱关系 |
+| `BESTIE` | 闺蜜 | 女性密友 |
+| `BUDDY` | 死党 | 铁杆兄弟 |
+| `BRO` | 基友 | 男性密友 |
+| `SOULMATE` | 知己 | 灵魂伴侣 |
+| `FAMILY` | 家人 | 亲情关系 |
+| `COLLEAGUE` | 同事 | 职场关系 |
+
+**预置聊天消息类型（typeCode=MESSAGE_TYPE）：**
+
+| itemCode | itemName | 说明 |
+|----------|----------|------|
+| `TEXT` | 文字 | 文字消息 |
+| `IMAGE` | 图片 | 图片消息（content 为图片URL，前端显示缩略图、点击放大） |
+| `VOICE` | 语音 | 语音消息（content 为语音URL，需传 `duration` 时长秒数，前端显示播放按钮+时长） |
+| `EMOJI` | 表情 | 表情消息（content 为表情，前端大字号显示） |
+
+### 字典类型管理
+
+| 方法 | 路径 | 说明 |
+|------|------|------|
+| `GET` | `/api/v1/dict/types` | 查询所有字典类型 |
+| `GET` | `/api/v1/dict/types/{id}` | 根据ID查询字典类型 |
+| `POST` | `/api/v1/dict/types` | 新增字典类型（`typeCode` 需唯一） |
+| `PUT` | `/api/v1/dict/types/{id}` | 修改字典类型（`typeCode` 不可与其他记录冲突） |
+| `DELETE` | `/api/v1/dict/types/{id}` | 删除字典类型 |
+
+**新增字典类型请求体：**
+```json
+{
+  "typeCode": "EDUCATION_TYPE",
+  "typeName": "学历类型",
+  "description": "学历分类",
+  "sortOrder": 1,
+  "status": "ACTIVE"
+}
+```
+
+### 字典项管理
+
+| 方法 | 路径 | 说明 |
+|------|------|------|
+| `GET` | `/api/v1/dict/items/{id}` | 根据ID查询字典项 |
+| `POST` | `/api/v1/dict/items` | 新增字典项（`typeCode` 必须已存在，同类型下 `itemCode` 唯一） |
+| `PUT` | `/api/v1/dict/items/{id}` | 修改字典项 |
+| `DELETE` | `/api/v1/dict/items/{id}` | 删除字典项 |
+
+**新增字典项请求体：**
+```json
+{
+  "typeCode": "RELATION_TYPE",
+  "itemCode": "PEN_PAL",
+  "itemName": "笔友",
+  "description": "书信往来朋友",
+  "sortOrder": 8,
+  "status": "ACTIVE"
+}
+```
+
+---
+
+## 三、关系模块
+
+### 发起关系 `POST /api/v1/relationships?targetUserId=2&relationType=COUPLE`
+
+> `relationType` 可选，默认 `COUPLE`（情侣）。取值来自 [查询字典项](#二字典模块) 中 `GET /api/v1/dict/items?typeCode=RELATION_TYPE` 返回的 `itemCode`（如 `BESTIE` 闺蜜、`BUDDY` 死党）。
 > 服务端校验：双方都不能已有确认的关系；不能和自己建立关系
 
 ### 确认关系 `PUT /api/v1/relationships/{id}/confirm`
@@ -174,9 +277,21 @@
 
 ### 我的关系 `GET /api/v1/relationships/me`
 
-**响应：**
+**响应：** `data` 为当前用户所有已确认的关系数组（支持情侣、闺蜜等多种关系并存）：
+
 ```json
-{ "id": 1, "user1Id": 1, "user2Id": 2, "status": "CONFIRMED" }
+[
+  {
+    "id": 1,
+    "initiatorId": 1,
+    "receiverId": 2,
+    "status": "CONFIRMED",
+    "relationType": "COUPLE",
+    "createdAt": "2026-01-01T00:00:00",
+    "confirmedAt": "2026-01-01T00:00:00",
+    "dissolvedAt": null
+  }
+]
 ```
 
 ---
@@ -223,7 +338,7 @@
 
 ---
 
-## 三、社区模块
+## 四、社区模块
 
 ### 发帖 `POST /api/v1/posts`
 
@@ -419,7 +534,7 @@
 
 ---
 
-## 四、聊天模块
+## 五、聊天模块
 
 ### 会话列表 `GET /api/v1/chat/conversations`
 
@@ -448,12 +563,28 @@
 
 **响应记录倒序，前端需要反转显示**
 
-### 发送消息 `POST /api/v1/chat/conversations/{id}/messages?content=你好`
+> 消息对象包含 `messageType` 与 `duration`（语音时长，其他类型为 null）。
+
+### 发送消息 `POST /api/v1/chat/conversations/{id}/messages?content=你好&messageType=TEXT&duration=`
 
 > 在指定会话发送消息，接收方由会话自动推断（无需传 receiverId）。仅互关用户可发送。
-> 也会更新会话的 `lastMessage` 和 `lastMessageTime`。
+> `messageType` 可选：`TEXT` 文字 / `IMAGE` 图片 / `VOICE` 语音 / `EMOJI` 表情，默认 `TEXT`。
+> `duration` 仅语音消息需要，单位秒，如 `duration=3`。
+> 也会更新会话的 `lastMessage` 和 `lastMessageTime`（图片/语音消息预览显示为 `[图片]`/`[语音]`）。
 
-**响应：** 返回 `ChatMessage` 对象（id、conversationId、senderId、receiverId、content、messageType、isRead、createdAt）
+**响应：** 返回 `ChatMessage` 对象（id、conversationId、senderId、receiverId、content、messageType、duration、isRead、createdAt）
+
+**发送示例：**
+```bash
+# 文字
+POST /api/v1/chat/conversations/1/messages?content=你好！
+# 图片（content 为图片URL）
+POST /api/v1/chat/conversations/1/messages?content=https://xxx/a.jpg&messageType=IMAGE
+# 语音（content 为语音URL）
+POST /api/v1/chat/conversations/1/messages?content=https://xxx/a.m4a&messageType=VOICE&duration=3
+# 表情
+POST /api/v1/chat/conversations/1/messages?content=%F0%9F%98%8D&messageType=EMOJI
+```
 
 ### 标记已读 `PUT /api/v1/chat/conversations/{id}/read`
 
@@ -472,12 +603,13 @@
 **② 发送消息：**
 ```json
 { "type": "MESSAGE", "receiverId": 2, "content": "你好！", "messageType": "TEXT" }
+{ "type": "MESSAGE", "receiverId": 2, "content": "https://xxx/a.m4a", "messageType": "VOICE", "duration": 3 }
 ```
 ← `{ "type": "MESSAGE_SENT", "messageId": "abc", "createdAt": "..." }`
 
 **③ 收到消息（对方发的）：**
 ```json
-{ "type": "NEW_MESSAGE", "messageId": "abc", "senderId": 2, "content": "你好！", "createdAt": "..." }
+{ "type": "NEW_MESSAGE", "messageId": "abc", "senderId": 2, "content": "你好！", "messageType": "TEXT", "duration": null, "createdAt": "..." }
 ```
 
 **④ 心跳：**
@@ -504,7 +636,7 @@
 
 ---
 
-## 五、用户对象结构
+## 六、用户对象结构
 
 > 所有返回用户信息的接口均使用以下扁平化结构，不再使用 `{ user: {...}, location: {...} }` 的嵌套格式。
 
@@ -537,7 +669,7 @@
 
 ---
 
-## 六、帖子对象结构（PostVO）
+## 七、帖子对象结构（PostVO）
 
 ```json
 {
@@ -569,7 +701,7 @@
 
 ---
 
-## 七、评论对象结构（CommentVO）
+## 八、评论对象结构（CommentVO）
 
 ```json
 {
@@ -587,7 +719,7 @@
 
 ---
 
-## 八、OpenFeign 远程调用接口
+## 九、OpenFeign 远程调用接口
 
 > 所有 Feign 客户端定义在 `xiaobin-api` 模块中，按服务分包。
 > 需要认证的接口通过 `X-User-Id` 请求头传递当前用户ID。
@@ -629,13 +761,13 @@ com.xml.xiaobinnode.api
 | `getCurrentUser` | `GET /api/v1/users/me` | 获取当前用户信息，需传 `X-User-Id` 头 |
 | `getUserById` | `GET /api/v1/users/{id}` | 根据ID获取用户 |
 | `searchByPhone` | `GET /api/v1/users/search?phone=` | 按手机号查找用户 |
-| `getUsersByIds` | `GET /api/v1/users/batch?ids=` | 批量获取用户，ids逗号分隔 |
+| `getUsersByIds` | `POST /api/v1/users/batch` | 批量获取用户（body 为 JSON 数组 `List<Long>`） |
 
 ### 8.2 关系服务 (`xiaobin-relationship`)
 
 | 方法 | 路径 | 说明 |
 |------|------|------|
-| `createRelationship` | `POST /api/v1/relationships` | 发起关系请求 |
+| `createRelationship` | `POST /api/v1/relationships` | 发起关系请求（可选传 `relationType`，默认 COUPLE） |
 | `getReceived` | `GET /api/v1/relationships/received` | 收到的关系请求 |
 | `getSent` | `GET /api/v1/relationships/sent` | 发送的关系请求 |
 | `confirmRelationship` | `PUT /api/v1/relationships/{id}/confirm` | 确认关系 |
@@ -683,7 +815,7 @@ com.xml.xiaobinnode.api
 | `getConversations` | `GET /api/v1/chat/conversations` | 会话列表 |
 | `createConversation` | `POST /api/v1/chat/conversations` | 创建会话（幂等，仅互关） |
 | `getMessages` | `GET /api/v1/chat/conversations/{id}/messages` | 消息历史（分页，倒序） |
-| `sendMessage` | `POST /api/v1/chat/conversations/{id}/messages` | 发送消息（接收方由会话推断） |
+| `sendMessage` | `POST /api/v1/chat/conversations/{id}/messages` | 发送消息（可选传 `messageType` 默认 TEXT，VOICE 需传 `duration`） |
 | `markAsRead` | `PUT /api/v1/chat/conversations/{id}/read` | 标记已读 |
 
 ### 使用示例
@@ -698,5 +830,5 @@ Result<UserVO> result = userFeignClient.getUserById(1L);
 UserVO user = result.getData();
 
 // 批量查询
-Result<List<UserVO>> batchResult = userFeignClient.getUsersByIds("1,2,3");
+Result<List<UserVO>> batchResult = userFeignClient.getUsersByIds(List.of(1L, 2L, 3L));
 ```

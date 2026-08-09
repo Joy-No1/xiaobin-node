@@ -1,0 +1,103 @@
+spring:
+  application:
+    name: xiaobin-job-admin
+  cloud:
+    nacos:
+      config:
+        server-addr: 127.0.0.1:8848
+        namespace: xiaobin
+        import-check:
+          enabled: false
+  config:
+    import:
+      # 数据源等配置在 Nacos 的 xiaobin-job-admin.yaml 中（见 docs/init-job.sql 与下方说明）
+      - nacos:xiaobin-job-admin.yaml?group=DEFAULT_GROUP&namespace=xiaobin
+
+  ### web config: error page、controller-format
+  web:
+    error:
+      whitelabel:
+        enabled: false
+  jackson:
+    date-format: yyyy-MM-dd HH:mm:ss
+
+  ### resources
+  mvc:
+    servlet:
+      load-on-startup: 0
+    static-path-pattern: /static/**
+  web.resources:
+    static-locations: classpath:/static/
+
+  ### freemarker
+  freemarker:
+    templateLoaderPath: classpath:/templates/
+    suffix: .ftl
+    charset: UTF-8
+    request-context-attribute: request
+    settings:
+      number_format: 0.##########
+      new_builtin_class_resolver: safer
+
+  ### xxl-job, email (任务失败邮件告警，可留空占位)
+  mail:
+    host: smtp.qq.com
+    port: 25
+    username: xxx@qq.com
+    from: xxx@qq.com
+    password: xxx
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+            required: true
+          socketFactory:
+            class: javax.net.ssl.SSLSocketFactory
+
+### mybatis
+mybatis:
+  mapper-locations: classpath:/mapper/**/*Mapper.xml
+
+### web config: actuator
+management:
+  server:
+    base-path: /actuator
+  health:
+    mail:
+      enabled: false
+
+server:
+  port: 8088
+  servlet:
+    context-path: /xiaobin-job-admin
+
+### xxl-job, access token（与执行器 xxl.job.accessToken 保持一致）
+xxl:
+  job:
+    accessToken: default_token
+    timeout: 3
+    i18n: zh_CN
+    triggerpool:
+      fast:
+        max: 300
+      slow:
+        max: 200
+    schedule:
+      batchsize: 100
+    logretentiondays: 30
+
+### xxl-sso
+xxl-sso:
+  token:
+    key: xxl_job_login_token
+    timeout: 604800000
+  client:
+    excluded:
+      paths:
+    login:
+      path: /auth/login
+logging:
+  file:
+    name: ./logs/xxl-job-admin.log

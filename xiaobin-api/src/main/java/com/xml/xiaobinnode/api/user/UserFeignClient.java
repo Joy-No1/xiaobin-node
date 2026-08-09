@@ -26,6 +26,6 @@ public interface UserFeignClient {
     Result<UserVO> searchByPhone(@RequestParam("phone") String phone);
 
     /** 批量获取用户信息，ids用逗号分隔 */
-    @GetMapping("/batch")
-    Result<List<UserVO>> getUsersByIds(@RequestParam("ids") String ids);
+    @PostMapping("/batch")
+    Result<List<UserVO>> getUsersByIds(@RequestBody List<Long> userIds);
 }

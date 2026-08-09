@@ -11,8 +11,6 @@ spring:
       discovery:
         server-addr: 127.0.0.1:8848
         namespace: xiaobin
-    openfeign:
-      lazy-attributes-resolution: true
   config:
     import:
       - nacos:common-config.yaml?group=DEFAULT_GROUP&namespace=xiaobin
