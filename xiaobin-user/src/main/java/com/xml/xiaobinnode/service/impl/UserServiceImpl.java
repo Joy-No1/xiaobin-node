@@ -5,7 +5,6 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.xml.xiaobinnode.api.community.CommunityFeignClient;
 import com.xml.xiaobinnode.api.community.dto.FollowStatusDTO;
 import com.xml.xiaobinnode.common.constant.CommonConstants;
-import com.xml.xiaobinnode.common.dto.Result;
 import com.xml.xiaobinnode.common.dto.UserVO;
 import com.xml.xiaobinnode.common.exception.BusinessException;
 import com.xml.xiaobinnode.common.util.JwtUtils;
@@ -306,10 +305,7 @@ public class UserServiceImpl implements UserService {
             return null;
         }
         try {
-            Result<FollowStatusDTO> result = communityFeignClient.getFollowStatus(currentUserId, targetUserId);
-            if (result != null && result.getCode() == 200 && result.getData() != null) {
-                return result.getData();
-            }
+            return communityFeignClient.getFollowStatus(currentUserId, targetUserId);
         } catch (Exception e) {
             log.warn("获取关注状态失败: currentUserId={}, targetUserId={}", currentUserId, targetUserId, e);
         }

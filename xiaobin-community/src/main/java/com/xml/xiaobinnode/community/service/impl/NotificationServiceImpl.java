@@ -3,7 +3,6 @@ package com.xml.xiaobinnode.community.service.impl;
 import com.xml.xiaobinnode.api.community.dto.NotificationDTO;
 import com.xml.xiaobinnode.api.user.UserFeignClient;
 import com.xml.xiaobinnode.common.dto.PageResult;
-import com.xml.xiaobinnode.common.dto.Result;
 import com.xml.xiaobinnode.common.dto.UserVO;
 import com.xml.xiaobinnode.common.exception.BusinessException;
 import com.xml.xiaobinnode.community.document.Notification;
@@ -111,10 +110,8 @@ public class NotificationServiceImpl implements NotificationService {
             return Collections.emptyList();
         }
         try {
-            Result<List<UserVO>> result = userFeignClient.getUsersByIds(userIds);
-            if (result != null && result.getCode() == 200 && result.getData() != null) {
-                return result.getData();
-            }
+            List<UserVO> users = userFeignClient.getUsersByIds(userIds);
+            return users != null ? users : Collections.emptyList();
         } catch (Exception e) {
             log.warn("批量获取用户信息失败: userIds={}", userIds, e);
         }

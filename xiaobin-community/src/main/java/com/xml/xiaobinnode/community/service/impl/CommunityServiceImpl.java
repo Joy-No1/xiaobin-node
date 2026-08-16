@@ -7,7 +7,6 @@ import com.xml.xiaobinnode.api.community.dto.FollowStatusDTO;
 import com.xml.xiaobinnode.api.user.UserFeignClient;
 import com.xml.xiaobinnode.common.constant.CommonConstants;
 import com.xml.xiaobinnode.common.dto.PageResult;
-import com.xml.xiaobinnode.common.dto.Result;
 import com.xml.xiaobinnode.common.dto.UserVO;
 import com.xml.xiaobinnode.common.exception.BusinessException;
 import com.xml.xiaobinnode.community.document.Comment;
@@ -235,10 +234,7 @@ public class CommunityServiceImpl implements CommunityService {
      */
     private UserVO fetchUserVO(Long userId) {
         try {
-            Result<UserVO> result = userFeignClient.getUserById(userId);
-            if (result != null && result.getCode() == 200 && result.getData() != null) {
-                return result.getData();
-            }
+            return userFeignClient.getUserById(userId);
         } catch (Exception e) {
             log.warn("获取用户信息失败: userId={}", userId, e);
         }
@@ -253,10 +249,8 @@ public class CommunityServiceImpl implements CommunityService {
             return Collections.emptyList();
         }
         try {
-            Result<List<UserVO>> result = userFeignClient.getUsersByIds(userIds);
-            if (result != null && result.getCode() == 200 && result.getData() != null) {
-                return result.getData();
-            }
+            List<UserVO> users = userFeignClient.getUsersByIds(userIds);
+            return users != null ? users : Collections.emptyList();
         } catch (Exception e) {
             log.warn("批量获取用户信息失败: userIds={}", userIds, e);
         }
@@ -409,9 +403,8 @@ public class CommunityServiceImpl implements CommunityService {
         String followerNickname = "用户" + followerId;
         String followerAvatar = "";
         try {
-            Result<UserVO> result = userFeignClient.getUserById(followerId);
-            if (result != null && result.getCode() == 200 && result.getData() != null) {
-                UserVO followerUser = result.getData();
+            UserVO followerUser = userFeignClient.getUserById(followerId);
+            if (followerUser != null) {
                 followerNickname = followerUser.getNickname() != null ? followerUser.getNickname() : followerNickname;
                 followerAvatar = followerUser.getAvatarUrl() != null ? followerUser.getAvatarUrl() : "";
             }

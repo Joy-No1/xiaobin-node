@@ -1,7 +1,6 @@
 package com.xml.xiaobinnode.controller;
 
 
-import com.xml.xiaobinnode.common.dto.Result;
 import com.xml.xiaobinnode.entity.SysRegion;
 import com.xml.xiaobinnode.service.SysRegionService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,12 +19,12 @@ public class RegionController {
     private SysRegionService sysRegionService;
 
     @GetMapping
-    public Result<List<SysRegion>> findAllProvince() {
-        return  Result.success(sysRegionService.getAllProvince());
+    public List<SysRegion> findAllProvince() {
+        return sysRegionService.getAllProvince();
     }
 
     @GetMapping("/children")
-    public Result<List<SysRegion>> getChildByParentCode(@RequestParam(required = false) String parentCode) {
-        return Result.success(sysRegionService.getChildren(parentCode));
+    public List<SysRegion> getChildByParentCode(@RequestParam(required = false) String parentCode) {
+        return sysRegionService.getChildren(parentCode);
     }
 }

@@ -1,10 +1,14 @@
 package com.xml.xiaobinnode.common.exception;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.xml.xiaobinnode.common.dto.Result;
+import feign.FeignException;
 import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.BindException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -13,15 +17,54 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
+import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
+
 @Slf4j
 @RestControllerAdvice
 @ConditionalOnWebApplication(type = ConditionalOnWebApplication.Type.SERVLET)
 public class GlobalExceptionHandler {
 
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+
     @ExceptionHandler(BusinessException.class)
-    public Result<Void> handleBusinessException(BusinessException e) {
+    public ResponseEntity<Result<Void>> handleBusinessException(BusinessException e) {
         log.warn("业务异常: code={}, message={}", e.getCode(), e.getMessage());
-        return Result.error(e.getCode(), e.getMessage());
+        int status = resolveStatus(e.getCode());
+        return ResponseEntity.status(status).body(Result.error(e.getCode(), e.getMessage()));
+    }
+
+    @ExceptionHandler(FeignException.class)
+    public ResponseEntity<Result<Void>> handleFeignException(FeignException e) {
+        int status = e.status() > 0 ? e.status() : HttpStatus.INTERNAL_SERVER_ERROR.value();
+        String message = "服务调用失败";
+        try {
+            java.util.Optional<ByteBuffer> body = e.responseBody();
+            if (body.isPresent()) {
+                ByteBuffer buffer = body.get();
+                byte[] bytes = new byte[buffer.remaining()];
+                buffer.get(bytes);
+                JsonNode node = OBJECT_MAPPER.readTree(new String(bytes, StandardCharsets.UTF_8));
+                if (node != null && node.has("code") && node.has("message")) {
+                    status = resolveStatus(node.get("code").asInt());
+                    message = node.get("message").asText();
+                }
+            }
+        } catch (Exception ex) {
+            log.debug("解析Feign异常响应体失败", ex);
+        }
+        log.warn("Feign调用失败: status={}, message={}", status, message, e);
+        return ResponseEntity.status(status).body(Result.error(status, message));
+    }
+
+    /**
+     * 将业务错误码映射为 HTTP 状态码：400/401/403/404 原样返回，其余统一为 500
+     */
+    private int resolveStatus(int code) {
+        if (code == 400 || code == 401 || code == 403 || code == 404) {
+            return code;
+        }
+        return HttpStatus.INTERNAL_SERVER_ERROR.value();
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)

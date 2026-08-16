@@ -5,7 +5,6 @@ import com.baomidou.mybatisplus.extension.conditions.query.LambdaQueryChainWrapp
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.xml.xiaobinnode.api.user.UserFeignClient;
 import com.xml.xiaobinnode.common.constant.CommonConstants;
-import com.xml.xiaobinnode.common.dto.Result;
 import com.xml.xiaobinnode.common.dto.UserVO;
 import com.xml.xiaobinnode.common.exception.BusinessException;
 import com.xml.xiaobinnode.relationship.constans.RelationEnum;
@@ -157,8 +156,8 @@ public class RelationshipServiceImpl implements RelationshipService {
         relationshipList.forEach(item -> userIds.add(item.getInitiatorId()));
         relationshipList.forEach(item -> userIds.add(item.getReceiverId()));
         userIds.remove(userId);
-        Result<List<UserVO>> userResult = userFeignClient.getUsersByIds(userIds.stream().toList());
-        Map<Long, UserVO> userVOMap = Optional.ofNullable(userResult.getData()).orElse(new ArrayList<>())
+        List<UserVO> userList = userFeignClient.getUsersByIds(userIds.stream().toList());
+        Map<Long, UserVO> userVOMap = Optional.ofNullable(userList).orElse(new ArrayList<>())
                 .stream().collect(Collectors.toMap(UserVO::getId, Function.identity(), (a, b) -> a));
         return relationshipList.stream().map(relationship -> {
             RelationshipVO relationshipVO = new RelationshipVO();

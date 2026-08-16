@@ -1,7 +1,6 @@
 package com.xml.xiaobinnode.controller;
 
 import com.xml.xiaobinnode.common.annotation.NoAuth;
-import com.xml.xiaobinnode.common.dto.Result;
 import com.xml.xiaobinnode.dto.LoginRequest;
 import com.xml.xiaobinnode.dto.LoginVO;
 import com.xml.xiaobinnode.dto.RegisterRequest;
@@ -24,14 +23,14 @@ public class AuthController {
     @NoAuth
     @PostMapping("/register")
     @Operation(summary = "用户注册", description = "手机号注册新用户")
-    public Result<User> register(@Valid @RequestBody RegisterRequest request) {
-        return Result.success("注册成功", userService.register(request));
+    public User register(@Valid @RequestBody RegisterRequest request) {
+        return userService.register(request);
     }
 
     @NoAuth
     @PostMapping("/login")
     @Operation(summary = "用户登录", description = "手机号/邮箱 + 密码登录，返回JWT Token")
-    public Result<LoginVO> login(@Valid @RequestBody LoginRequest request) {
-        return Result.success(userService.login(request));
+    public LoginVO login(@Valid @RequestBody LoginRequest request) {
+        return userService.login(request);
     }
 }

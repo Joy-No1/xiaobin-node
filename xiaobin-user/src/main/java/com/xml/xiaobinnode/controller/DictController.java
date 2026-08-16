@@ -1,6 +1,6 @@
 package com.xml.xiaobinnode.controller;
 
-import com.xml.xiaobinnode.common.dto.Result;
+import com.xml.xiaobinnode.common.exception.BusinessException;
 import com.xml.xiaobinnode.entity.SysDictItem;
 import com.xml.xiaobinnode.entity.SysDictType;
 import com.xml.xiaobinnode.service.SysDictItemService;
@@ -29,130 +29,128 @@ public class DictController {
 
     @GetMapping("/types")
     @Operation(summary = "获取所有字典类型")
-    public Result<List<SysDictType>> getAllTypes() {
-        return Result.success(sysDictTypeService.list());
+    public List<SysDictType> getAllTypes() {
+        return sysDictTypeService.list();
     }
 
     @GetMapping("/types/{id}")
     @Operation(summary = "根据ID获取字典类型")
-    public Result<SysDictType> getTypeById(@PathVariable Integer id) {
+    public SysDictType getTypeById(@PathVariable Integer id) {
         SysDictType type = sysDictTypeService.getById(id);
         if (type == null) {
-            return Result.notFound("字典类型不存在");
+            throw new BusinessException(404, "字典类型不存在");
         }
-        return Result.success(type);
+        return type;
     }
 
     @PostMapping("/types")
     @Operation(summary = "创建字典类型")
-    public Result<SysDictType> createType(@RequestBody SysDictType sysDictType) {
+    public SysDictType createType(@RequestBody SysDictType sysDictType) {
         if (StringUtils.isBlank(sysDictType.getTypeCode())) {
-            return Result.badRequest("字典类型编码不能为空");
+            throw new BusinessException(400, "字典类型编码不能为空");
         }
         SysDictType existing = sysDictTypeService.getByTypeCode(sysDictType.getTypeCode());
         if (existing != null) {
-            return Result.badRequest("字典类型编码已存在: " + sysDictType.getTypeCode());
+            throw new BusinessException(400, "字典类型编码已存在: " + sysDictType.getTypeCode());
         }
         sysDictTypeService.save(sysDictType);
-        return Result.success(sysDictType);
+        return sysDictType;
     }
 
     @PutMapping("/types/{id}")
     @Operation(summary = "更新字典类型")
-    public Result<SysDictType> updateType(@PathVariable Integer id, @RequestBody SysDictType sysDictType) {
+    public SysDictType updateType(@PathVariable Integer id, @RequestBody SysDictType sysDictType) {
         SysDictType existing = sysDictTypeService.getById(id);
         if (existing == null) {
-            return Result.notFound("字典类型不存在");
+            throw new BusinessException(404, "字典类型不存在");
         }
         SysDictType byCode = sysDictTypeService.getByTypeCode(sysDictType.getTypeCode());
         if (byCode != null && !byCode.getId().equals(id)) {
-            return Result.badRequest("字典类型编码已存在: " + sysDictType.getTypeCode());
+            throw new BusinessException(400, "字典类型编码已存在: " + sysDictType.getTypeCode());
         }
         sysDictType.setId(id);
         sysDictTypeService.updateById(sysDictType);
-        return Result.success(sysDictTypeService.getById(id));
+        return sysDictTypeService.getById(id);
     }
 
     @DeleteMapping("/types/{id}")
     @Operation(summary = "删除字典类型")
-    public Result<Void> deleteType(@PathVariable Integer id) {
+    public void deleteType(@PathVariable Integer id) {
         SysDictType existing = sysDictTypeService.getById(id);
         if (existing == null) {
-            return Result.notFound("字典类型不存在");
+            throw new BusinessException(404, "字典类型不存在");
         }
         sysDictTypeService.removeById(id);
-        return Result.success();
     }
 
     // ==================== 字典项 CRUD ====================
 
     @GetMapping("/items")
     @Operation(summary = "获取字典项", description = "传入typeCode时返回该类型下启用的字典项（按sort_order升序），不传则返回全部")
-    public Result<List<SysDictItem>> getItems(@RequestParam(required = false) String typeCode) {
+    public List<SysDictItem> getItems(@RequestParam(required = false) String typeCode) {
         if (StringUtils.isNotBlank(typeCode)) {
-            return Result.success(sysDictItemService.getActiveItemsByTypeCode(typeCode));
+            return sysDictItemService.getActiveItemsByTypeCode(typeCode);
         }
-        return Result.success(sysDictItemService.list());
+        return sysDictItemService.list();
     }
 
     @GetMapping("/items/{id}")
     @Operation(summary = "根据ID获取字典项")
-    public Result<SysDictItem> getItemById(@PathVariable Integer id) {
+    public SysDictItem getItemById(@PathVariable Integer id) {
         SysDictItem item = sysDictItemService.getById(id);
         if (item == null) {
-            return Result.notFound("字典项不存在");
+            throw new BusinessException(404, "字典项不存在");
         }
-        return Result.success(item);
+        return item;
     }
 
     @PostMapping("/items")
     @Operation(summary = "创建字典项")
-    public Result<SysDictItem> createItem(@RequestBody SysDictItem sysDictItem) {
+    public SysDictItem createItem(@RequestBody SysDictItem sysDictItem) {
         if (StringUtils.isBlank(sysDictItem.getTypeCode())) {
-            return Result.badRequest("字典类型编码不能为空");
+            throw new BusinessException(400, "字典类型编码不能为空");
         }
         SysDictType type = sysDictTypeService.getByTypeCode(sysDictItem.getTypeCode());
         if (type == null) {
-            return Result.badRequest("字典类型编码不存在: " + sysDictItem.getTypeCode());
+            throw new BusinessException(400, "字典类型编码不存在: " + sysDictItem.getTypeCode());
         }
         boolean duplicate = sysDictItemService.getAllItemsByTypeCode(sysDictItem.getTypeCode()).stream()
                 .anyMatch(i -> i.getItemCode().equals(sysDictItem.getItemCode()));
         if (duplicate) {
-            return Result.badRequest("该类型下字典项编码已存在: " + sysDictItem.getItemCode());
+            throw new BusinessException(400, "该类型下字典项编码已存在: " + sysDictItem.getItemCode());
         }
         sysDictItemService.save(sysDictItem);
-        return Result.success(sysDictItem);
+        return sysDictItem;
     }
 
     @PutMapping("/items/{id}")
     @Operation(summary = "更新字典项")
-    public Result<SysDictItem> updateItem(@PathVariable Integer id, @RequestBody SysDictItem sysDictItem) {
+    public SysDictItem updateItem(@PathVariable Integer id, @RequestBody SysDictItem sysDictItem) {
         SysDictItem existing = sysDictItemService.getById(id);
         if (existing == null) {
-            return Result.notFound("字典项不存在");
+            throw new BusinessException(404, "字典项不存在");
         }
         SysDictType type = sysDictTypeService.getByTypeCode(sysDictItem.getTypeCode());
         if (type == null) {
-            return Result.badRequest("字典类型编码不存在: " + sysDictItem.getTypeCode());
+            throw new BusinessException(400, "字典类型编码不存在: " + sysDictItem.getTypeCode());
         }
         boolean duplicate = sysDictItemService.getAllItemsByTypeCode(sysDictItem.getTypeCode()).stream()
                 .anyMatch(i -> i.getItemCode().equals(sysDictItem.getItemCode()) && !i.getId().equals(id));
         if (duplicate) {
-            return Result.badRequest("该类型下字典项编码已存在: " + sysDictItem.getItemCode());
+            throw new BusinessException(400, "该类型下字典项编码已存在: " + sysDictItem.getItemCode());
         }
         sysDictItem.setId(id);
         sysDictItemService.updateById(sysDictItem);
-        return Result.success(sysDictItemService.getById(id));
+        return sysDictItemService.getById(id);
     }
 
     @DeleteMapping("/items/{id}")
     @Operation(summary = "删除字典项")
-    public Result<Void> deleteItem(@PathVariable Integer id) {
+    public void deleteItem(@PathVariable Integer id) {
         SysDictItem existing = sysDictItemService.getById(id);
         if (existing == null) {
-            return Result.notFound("字典项不存在");
+            throw new BusinessException(404, "字典项不存在");
         }
         sysDictItemService.removeById(id);
-        return Result.success();
     }
 }

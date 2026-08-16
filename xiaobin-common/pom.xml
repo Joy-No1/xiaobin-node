@@ -64,6 +64,20 @@
             <artifactId>jakarta.servlet-api</artifactId>
             <scope>provided</scope>
         </dependency>
+
+        <!-- OpenFeign core（编译期引用 FeignException，运行时由各服务的 openfeign 提供，不传导给网关） -->
+        <dependency>
+            <groupId>io.github.openfeign</groupId>
+            <artifactId>feign-core</artifactId>
+            <scope>provided</scope>
+        </dependency>
+
+        <!-- Jackson（编译期解析 Feign 异常响应体，运行时由各服务的 web starter 提供） -->
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+            <scope>provided</scope>
+        </dependency>
     </dependencies>
 
 </project>

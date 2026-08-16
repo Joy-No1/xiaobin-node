@@ -5,7 +5,6 @@ import com.xml.xiaobinnode.chat.entity.ChatMessage;
 import com.xml.xiaobinnode.chat.entity.Conversation;
 import com.xml.xiaobinnode.chat.service.ChatService;
 import com.xml.xiaobinnode.common.dto.PageResult;
-import com.xml.xiaobinnode.common.dto.Result;
 import com.xml.xiaobinnode.common.exception.BusinessException;
 import com.xml.xiaobinnode.common.util.UserContext;
 import io.swagger.v3.oas.annotations.Operation;
@@ -25,14 +24,14 @@ public class ChatController {
 
     @GetMapping("/conversations")
     @Operation(summary = "会话列表")
-    public Result<List<Conversation>> getConversations() {
+    public List<Conversation> getConversations() {
         Long userId = Long.valueOf(UserContext.getUserId());
-        return Result.success(chatService.getConversations(userId));
+        return chatService.getConversations(userId);
     }
 
     @PostMapping("/conversations")
     @Operation(summary = "创建会话", description = "与目标用户创建会话（幂等，已存在则返回已有会话），仅互关用户可创建")
-    public Result<Conversation> createConversation(@RequestParam Long targetUserId) {
+    public Conversation createConversation(@RequestParam Long targetUserId) {
         Long userId = Long.valueOf(UserContext.getUserId());
         if (userId.equals(targetUserId)) {
             throw new BusinessException("不能与自己创建会话");
@@ -40,33 +39,32 @@ public class ChatController {
         if (!chatService.isMutualFollow(userId, targetUserId)) {
             throw new BusinessException("仅互相关注的用户才能创建会话");
         }
-        return Result.success(chatService.getOrCreateConversation(userId, targetUserId));
+        return chatService.getOrCreateConversation(userId, targetUserId);
     }
 
     @GetMapping("/conversations/{id}/messages")
     @Operation(summary = "消息历史")
-    public Result<PageResult<ChatMessage>> getMessages(@PathVariable String id,
-                                                        @RequestParam(defaultValue = "1") int page,
-                                                        @RequestParam(defaultValue = "20") int size) {
+    public PageResult<ChatMessage> getMessages(@PathVariable String id,
+                                               @RequestParam(defaultValue = "1") int page,
+                                               @RequestParam(defaultValue = "20") int size) {
         Page<ChatMessage> messagePage = chatService.getMessages(id, page, size);
-        return Result.success(PageResult.of(page, size, messagePage.getTotal(), messagePage.getRecords()));
+        return PageResult.of(page, size, messagePage.getTotal(), messagePage.getRecords());
     }
 
     @PostMapping("/conversations/{id}/messages")
     @Operation(summary = "发送消息", description = "在指定会话发送消息，接收方由会话自动推断。messageType可选：TEXT文字/IMAGE图片/VOICE语音/EMOJI表情，默认TEXT；语音需传duration时长（秒）")
-    public Result<ChatMessage> sendMessage(@PathVariable String id,
-                                           @RequestParam String content,
-                                           @RequestParam(required = false, defaultValue = "TEXT") String messageType,
-                                           @RequestParam(required = false) Integer duration) {
+    public ChatMessage sendMessage(@PathVariable String id,
+                                   @RequestParam String content,
+                                   @RequestParam(required = false, defaultValue = "TEXT") String messageType,
+                                   @RequestParam(required = false) Integer duration) {
         Long userId = Long.valueOf(UserContext.getUserId());
-        return Result.success(chatService.sendMessageByConversation(Long.valueOf(id), userId, content, messageType, duration));
+        return chatService.sendMessageByConversation(Long.valueOf(id), userId, content, messageType, duration);
     }
 
     @PutMapping("/conversations/{id}/read")
     @Operation(summary = "标记已读")
-    public Result<Void> markAsRead(@PathVariable String id) {
+    public void markAsRead(@PathVariable String id) {
         Long userId = Long.valueOf(UserContext.getUserId());
         chatService.markAsRead(Long.valueOf(id), userId);
-        return Result.success();
     }
 }
