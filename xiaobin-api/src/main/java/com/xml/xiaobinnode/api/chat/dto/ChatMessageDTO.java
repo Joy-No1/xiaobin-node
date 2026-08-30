@@ -17,9 +17,6 @@ public class ChatMessageDTO {
     /** 发送者 */
     private Long senderId;
 
-    /** 接收者 */
-    private Long receiverId;
-
     private String content;
 
     /** TEXT-文字 / IMAGE-图片 / VOICE-语音 / EMOJI-表情 */
@@ -27,9 +24,6 @@ public class ChatMessageDTO {
 
     /** 语音消息时长（秒），其他类型为null */
     private Integer duration;
-
-    /** 0未读 1已读 */
-    private Integer isRead;
 
     private Date createdAt;
 }

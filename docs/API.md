@@ -536,43 +536,58 @@
 
 ## 五、聊天模块
 
+> 会话采用三表设计：`conversation`（会话本体）+ `conversation_member`（每个用户独立的未读/置顶/免打扰/已读进度）+ `message`（消息，不存 receiverId/isRead，已读进度在 `conversation_member.last_read_message_id`）。
+
 ### 会话列表 `GET /api/v1/chat/conversations`
+
+> 返回当前用户所有会话，已组装好「我在会话中的状态」和「私聊对方用户信息」，前端无需再判断哪个是我/对方。
+> 排序：置顶优先，其次最后消息时间倒序。
+
+**响应：**
+```json
+{
+  "code": 200,
+  "data": [
+    {
+      "id": 1,
+      "type": "PRIVATE",
+      "lastMessageId": 10,
+      "lastMessage": "你好！",
+      "lastMessageTime": "2026-01-01T12:00:00",
+      "createdAt": "2026-01-01T00:00:00",
+      "updatedAt": "2026-01-01T12:00:00",
+      "lastReadMessageId": 10,
+      "unreadCount": 0,
+      "isPinned": 0,
+      "isMuted": 0,
+      "otherUser": { "id": 2, "nickname": "小斌", "avatarUrl": "..." }
+    }
+  ]
+}
+```
 
 ### 创建会话 `POST /api/v1/chat/conversations?targetUserId=2`
 
 > ⚠️ **解决"互关但无聊天记录"的问题**：互关后点击"发消息"，前端先调用此接口创建/获取会话（幂等），再进入聊天页。
 > 仅互关用户可创建，若已存在则返回已有会话。
 
-**响应：**
-```json
-{
-  "code": 200,
-  "data": {
-    "id": 1,
-    "user1Id": 1,
-    "user2Id": 2,
-    "lastMessage": null,
-    "lastMessageTime": null,
-    "createdAt": "2026-01-01T00:00:00",
-    "updatedAt": "2026-01-01T00:00:00"
-  }
-}
-```
+**响应：** 返回 `ConversationDTO`（结构同会话列表的单条，`otherUser` 为目标用户）。
 
 ### 消息历史 `GET /api/v1/chat/conversations/{id}/messages?page=1&size=20`
 
 **响应记录倒序，前端需要反转显示**
 
-> 消息对象包含 `messageType` 与 `duration`（语音时长，其他类型为 null）。
+> 消息对象：`id`、`conversationId`、`senderId`、`content`、`messageType`、`duration`（语音时长，其他类型为 null）、`createdAt`。
+> 不再返回 `receiverId`/`isRead`：接收方由会话成员推断，已读状态由会话列表的 `unreadCount`/`lastReadMessageId` 表达。
 
 ### 发送消息 `POST /api/v1/chat/conversations/{id}/messages?content=你好&messageType=TEXT&duration=`
 
-> 在指定会话发送消息，接收方由会话自动推断（无需传 receiverId）。仅互关用户可发送。
+> 在指定会话发送消息，接收方由会话成员自动推断（无需传 receiverId）。仅互关用户可发送。
 > `messageType` 可选：`TEXT` 文字 / `IMAGE` 图片 / `VOICE` 语音 / `EMOJI` 表情，默认 `TEXT`。
 > `duration` 仅语音消息需要，单位秒，如 `duration=3`。
-> 也会更新会话的 `lastMessage` 和 `lastMessageTime`（图片/语音消息预览显示为 `[图片]`/`[语音]`）。
+> 也会更新会话的 `lastMessageId`、`lastMessage` 和 `lastMessageTime`（图片/语音消息预览显示为 `[图片]`/`[语音]`）。
 
-**响应：** 返回 `ChatMessage` 对象（id、conversationId、senderId、receiverId、content、messageType、duration、isRead、createdAt）
+**响应：** 返回 `ChatMessageDTO`（id、conversationId、senderId、content、messageType、duration、createdAt）
 
 **发送示例：**
 ```bash
@@ -587,6 +602,8 @@ POST /api/v1/chat/conversations/1/messages?content=%F0%9F%98%8D&messageType=EMOJ
 ```
 
 ### 标记已读 `PUT /api/v1/chat/conversations/{id}/read`
+
+> 将该会话的 `lastReadMessageId` 推进到当前最大消息ID，并把 `unreadCount` 清零。
 
 ---
 

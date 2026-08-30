@@ -164,10 +164,11 @@ xiaobin-node/
     └── src/main/java/.../chat/
         ├── ChatApplication.java
         ├── controller/ChatController.java
-        ├── document/
+        ├── entity/
         │   ├── ChatMessage.java
-        │   └── Conversation.java
-        ├── repository/ (×2)
+        │   ├── Conversation.java
+        │   └── ConversationMember.java
+        ├── mapper/ (×3)
         ├── service/ChatService.java + impl
         └── websocket/
             ├── ChatWebSocketHandler.java  # 消息处理
@@ -188,6 +189,9 @@ xiaobin-node/
 | `score_item` | 自定义加减分项 | user_id, item_name, score_value, type(ADD/SUBTRACT) |
 | `score_record` | 打分记录 | scorer_id, target_id, score_change, reason, score_before/after |
 | `follow` | 关注关系 | follower_id, followee_id, status(FOLLOWING/MUTUAL) |
+| `conversation` | 聊天会话 | id, type, private_key(幂等键), last_message_id, last_message, last_message_time |
+| `conversation_member` | 会话参与者 | conversation_id, user_id, last_read_message_id, unread_count, is_pinned, is_muted |
+| `message` | 聊天消息 | conversation_id, sender_id, content, message_type, duration |
 
 ### MongoDB（半结构化数据）
 
@@ -196,8 +200,6 @@ xiaobin-node/
 | `posts` | 广场帖子 | userId, content, images[], location, likeCount, commentCount |
 | `comments` | 评论 | postId, userId, content, replyToUserId, parentCommentId |
 | `post_likes` | 点赞记录 | postId, userId |
-| `conversations` | 聊天会话 | user1Id, user2Id, lastMessage, lastMessageTime |
-| `chat_messages` | 聊天消息 | conversationId, senderId, receiverId, content, messageType, read |
 
 ### Redis（缓存）
 

@@ -9,7 +9,7 @@ import java.util.Date;
  * 聊天消息实体
  */
 @Data
-@TableName("chat_message")
+@TableName("message")
 public class ChatMessage {
 
     @TableId(type = IdType.AUTO)
@@ -19,8 +19,6 @@ public class ChatMessage {
 
     private Long senderId;
 
-    private Long receiverId;
-
     private String content;
 
     /** 消息类型: TEXT-文字, IMAGE-图片, VOICE-语音, EMOJI-表情 */
@@ -28,8 +26,6 @@ public class ChatMessage {
 
     /** 语音消息时长（秒），其他类型为null */
     private Integer duration;
-
-    private Integer isRead;
 
     @TableField(fill = FieldFill.INSERT)
     private Date createdAt;

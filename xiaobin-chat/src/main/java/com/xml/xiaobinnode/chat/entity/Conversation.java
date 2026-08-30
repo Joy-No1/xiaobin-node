@@ -16,9 +16,13 @@ public class Conversation {
     @TableId(type = IdType.AUTO)
     private Long id;
 
-    private Long user1Id;
+    /** 会话类型：PRIVATE-私聊 */
+    private String type;
 
-    private Long user2Id;
+    /** 私聊幂等键：minUserId_maxUserId */
+    private String privateKey;
+
+    private Long lastMessageId;
 
     private String lastMessage;
 

@@ -71,9 +71,9 @@ ALTER TABLE `relationship`
     ADD COLUMN IF NOT EXISTS `relation_type` VARCHAR(50) DEFAULT NULL COMMENT '关系类型编码（关联sys_dict_item.item_code, type_code=RELATION_TYPE）' AFTER `status`;
 
 -- ----------------------------
--- 聊天消息表增加语音时长字段（对已有数据库的迁移）
--- 新建库可直接使用 init-chat.sql（已包含该列）
+-- 聊天模块表重构为 conversation / conversation_member / message 三表（对已有数据库的迁移说明）
+-- 新建库可直接使用 init-chat.sql（已包含新结构）
+-- 旧库（conversation 含 user1_id/user2_id + chat_message 表）需手动迁移：
+--   1) 新建 conversation_member，按旧 conversation 的 user1_id/user2_id 各插入一行成员（含未读/已读迁移）
+--   2) chat_message 改为 message，去掉 receiver_id/is_read（已读进度迁移到 conversation_member.last_read_message_id）
 -- ----------------------------
-USE xiaobin_chat;
-ALTER TABLE `chat_message`
-    ADD COLUMN `duration` INT DEFAULT NULL COMMENT '语音消息时长（秒），其他类型为NULL' AFTER `message_type`;

@@ -41,7 +41,8 @@ public class UserController {
     @GetMapping("/{id}")
     @Operation(summary = "查看用户主页（含地址、关注状态）")
     public UserProfileVO getUserById(@PathVariable Long id) {
-        Long currentUserId = Long.valueOf(UserContext.getUserId());
+        String userId = UserContext.getUserId();
+        Long currentUserId = Long.parseLong(userId);
         UserProfileVO vo = userService.getUserProfileVO(currentUserId, id);
         if (vo == null) {
             throw new BusinessException(404, "用户不存在");
