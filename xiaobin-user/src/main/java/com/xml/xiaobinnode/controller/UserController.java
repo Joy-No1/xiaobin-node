@@ -12,9 +12,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Tag(name = "用户接口", description = "个人信息管理")
 @RestController
@@ -41,8 +39,7 @@ public class UserController {
     @GetMapping("/{id}")
     @Operation(summary = "查看用户主页（含地址、关注状态）")
     public UserProfileVO getUserById(@PathVariable Long id) {
-        String userId = UserContext.getUserId();
-        Long currentUserId = Long.parseLong(userId);
+        Long currentUserId = Long.parseLong(UserContext.getUserId());
         UserProfileVO vo = userService.getUserProfileVO(currentUserId, id);
         if (vo == null) {
             throw new BusinessException(404, "用户不存在");
