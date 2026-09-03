@@ -1,0 +1,27 @@
+spring:
+  application:
+    name: xiaobin-api
+  cloud:
+    nacos:
+      config:
+        server-addr: 127.0.0.1:8848
+        namespace: xiaobin
+        import-check:
+          enabled: false
+      discovery:
+        server-addr: 127.0.0.1:8848
+        namespace: xiaobin
+  config:
+    import:
+      - nacos:common-config.yaml?group=DEFAULT_GROUP&namespace=xiaobin
+      - nacos:xiaobin-api.yaml?group=DEFAULT_GROUP&namespace=xiaobin
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+    enabled: true
+  api-docs:
+    enabled: true
+
+server:
+  port: 8090

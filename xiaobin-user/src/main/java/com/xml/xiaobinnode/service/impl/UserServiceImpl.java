@@ -2,8 +2,8 @@ package com.xml.xiaobinnode.service.impl;
 
 import cn.hutool.crypto.digest.BCrypt;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.xml.xiaobinnode.api.community.CommunityFeignClient;
-import com.xml.xiaobinnode.api.community.dto.FollowStatusDTO;
+import com.xml.xiaobinnode.api.feign.community.CommunityFeignClient;
+import com.xml.xiaobinnode.common.dto.FollowStatusDTO;
 import com.xml.xiaobinnode.common.constant.CommonConstants;
 import com.xml.xiaobinnode.common.dto.UserVO;
 import com.xml.xiaobinnode.common.exception.BusinessException;

@@ -1,6 +1,6 @@
 package com.xml.xiaobinnode.community.service;
 
-import com.xml.xiaobinnode.api.community.dto.NotificationDTO;
+import com.xml.xiaobinnode.common.dto.NotificationDTO;
 import com.xml.xiaobinnode.common.dto.PageResult;
 import com.xml.xiaobinnode.community.document.Notification;
 

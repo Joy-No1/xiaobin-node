@@ -18,7 +18,7 @@ import java.util.List;
  */
 @Tag(name = "字典接口", description = "通用字典类型与字典项的增删改查")
 @RestController
-@RequestMapping("/api/v1/dict")
+@RequestMapping("/dict")
 @RequiredArgsConstructor
 public class DictController {
 

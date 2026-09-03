@@ -3,8 +3,8 @@ package com.xml.xiaobinnode.chat.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.xml.xiaobinnode.api.chat.dto.ConversationDTO;
-import com.xml.xiaobinnode.api.user.UserFeignClient;
+import com.xml.xiaobinnode.common.dto.ConversationDTO;
+import com.xml.xiaobinnode.api.feign.user.UserFeignClient;
 import com.xml.xiaobinnode.chat.entity.ChatMessage;
 import com.xml.xiaobinnode.chat.entity.Conversation;
 import com.xml.xiaobinnode.chat.entity.ConversationMember;
@@ -23,7 +23,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;

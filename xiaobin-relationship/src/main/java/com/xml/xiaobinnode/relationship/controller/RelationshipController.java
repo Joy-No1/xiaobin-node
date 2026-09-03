@@ -15,7 +15,7 @@ import java.util.List;
 
 @Tag(name = "关系接口", description = "情侣关系管理与好感度打分")
 @RestController
-@RequestMapping("/api/v1/relationships")
+@RequestMapping("/relationships")
 @RequiredArgsConstructor
 public class RelationshipController {
 

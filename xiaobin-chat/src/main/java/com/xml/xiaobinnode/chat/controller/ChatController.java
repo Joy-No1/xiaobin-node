@@ -1,8 +1,8 @@
 package com.xml.xiaobinnode.chat.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.xml.xiaobinnode.api.chat.dto.ChatMessageDTO;
-import com.xml.xiaobinnode.api.chat.dto.ConversationDTO;
+import com.xml.xiaobinnode.common.dto.ChatMessageDTO;
+import com.xml.xiaobinnode.common.dto.ConversationDTO;
 import com.xml.xiaobinnode.chat.entity.ChatMessage;
 import com.xml.xiaobinnode.chat.service.ChatService;
 import com.xml.xiaobinnode.common.dto.PageResult;
@@ -17,7 +17,7 @@ import java.util.List;
 
 @Tag(name = "聊天接口", description = "会话列表、消息历史、发消息")
 @RestController
-@RequestMapping("/api/v1/chat")
+@RequestMapping("/chat")
 @RequiredArgsConstructor
 public class ChatController {
 

@@ -2,8 +2,7 @@
 <configuration debug="false" scan="true" scanPeriod="1 seconds">
 
     <contextName>logback</contextName>
-<!--    TODO  日志文件切换-->
-    <property name="log.path" value="${LOG_HOME:-./logs/xxl-job-admin.log}/xxl-job/xxl-job-admin.log" />
+    <property name="log.dir" value="${LOG_HOME:-./logs/xxl-job-admin}" />
     <appender name="console" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>
             <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
@@ -11,9 +10,10 @@
     </appender>
 
     <appender name="file" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <file>${log.path}</file>
+        <file>${log.dir}/xxl-job-admin.log</file>
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-            <fileNamePattern>${log.path}.%d{yyyy-MM-dd}.log</fileNamePattern>
+            <fileNamePattern>${log.dir}/%d{yyyy/MM/dd}/xxl-job-admin.log</fileNamePattern>
+            <maxHistory>90</maxHistory>
         </rollingPolicy>
         <encoder>
             <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>

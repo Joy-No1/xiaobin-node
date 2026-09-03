@@ -98,6 +98,3 @@ xxl-sso:
       paths:
     login:
       path: /auth/login
-logging:
-  file:
-    name: ./logs/xxl-job-admin.log

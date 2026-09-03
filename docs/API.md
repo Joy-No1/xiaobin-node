@@ -738,102 +738,100 @@ POST /api/v1/chat/conversations/1/messages?content=%F0%9F%98%8D&messageType=EMOJ
 
 ## 九、OpenFeign 远程调用接口
 
-> 所有 Feign 客户端定义在 `xiaobin-api` 模块中，按服务分包。
-> 需要认证的接口通过 `X-User-Id` 请求头传递当前用户ID。
+> `xiaobin-api` 同时承担两层职责：
+> 1. **对外聚合**：`com.xml.xiaobinnode.api.controller` 下 `/api/v1/**` 对外接口，统一封装 `Result`；
+> 2. **内部 Feign 契约**：`com.xml.xiaobinnode.api.feign.*` 下各业务服务的 Feign 客户端，路径**不带 `/api`、不带 `/v1`**（仅作为服务间调用目标）。
+>
+> 业务服务（user/chat/community/relationship）的 Controller 只暴露内部路径（如 `/users`、`/chat`）；需要认证的接口通过 `X-User-Id` 请求头传递当前用户ID。
+> 公共 Feign DTO 已统一迁移至 `xiaobin-common` 的 `com.xml.xiaobinnode.common.dto`。
 
 ### 包结构
 
 ```
 com.xml.xiaobinnode.api
-├── user/          # 用户服务
-│   └── UserFeignClient.java
-├── relationship/  # 关系服务
-│   ├── dto/       # 关系相关DTO
-│   │   ├── RelationshipDTO.java
-│   │   ├── ScoreDTO.java
-│   │   ├── ScoreItemDTO.java
-│   │   └── ScoreRecordDTO.java
-│   └── RelationshipFeignClient.java
-├── community/     # 社区服务
-│   ├── dto/       # 社区相关DTO
-│   │   ├── PostDTO.java
-│   │   ├── CommentDTO.java
-│   │   ├── NotificationDTO.java
-│   │   ├── FollowStatusDTO.java
-│   │   ├── MyFollowDTO.java
-│   │   ├── MyLikeDTO.java
-│   │   └── MyCommentDTO.java
-│   └── CommunityFeignClient.java
-└── chat/          # 聊天服务
-    ├── dto/       # 聊天相关DTO
-    │   ├── ConversationDTO.java
-    │   └── ChatMessageDTO.java
-    └── ChatFeignClient.java
+├── controller/             # 聚合对外接口（/api/v1/**）
+│   ├── AuthAggController.java
+│   ├── UserAggController.java
+│   ├── ChatAggController.java
+│   ├── RelationshipAggController.java
+│   ├── CommunityAggController.java
+│   ├── DictAggController.java
+│   ├── RegionAggController.java
+│   └── FileAggController.java
+└── feign/                  # 内部 Feign 客户端（路径无 /api、无 /v1）
+    ├── auth/AuthFeignClient.java
+    ├── user/UserFeignClient.java
+    ├── relationship/RelationshipFeignClient.java
+    ├── community/CommunityFeignClient.java
+    ├── chat/ChatFeignClient.java
+    ├── dict/DictFeignClient.java
+    └── region/RegionFeignClient.java
 ```
 
-### 8.1 用户服务 (`xiaobin-user`)
+### 8.1 用户服务 (`xiaobin-user`，内部路径前缀 `/users`)
 
 | 方法 | 路径 | 说明 |
 |------|------|------|
-| `getCurrentUser` | `GET /api/v1/users/me` | 获取当前用户信息，需传 `X-User-Id` 头 |
-| `getUserById` | `GET /api/v1/users/{id}` | 根据ID获取用户 |
-| `searchByPhone` | `GET /api/v1/users/search?phone=` | 按手机号查找用户 |
-| `getUsersByIds` | `POST /api/v1/users/batch` | 批量获取用户（body 为 JSON 数组 `List<Long>`） |
+| `getCurrentUser` | `GET /users/me` | 获取当前用户信息，需传 `X-User-Id` 头 |
+| `getUserById` | `GET /users/{id}` | 根据ID获取用户（返回 UserProfileVO：含关注状态） |
+| `searchByPhone` | `GET /users/search?phone=` | 按手机号查找用户 |
+| `getUsersByIds` | `POST /users/batch` | 批量获取用户（body 为 JSON 数组 `List<Long>`） |
+| `updateCurrentUser` | `PUT /users/me` | 更新当前用户信息 |
 
-### 8.2 关系服务 (`xiaobin-relationship`)
-
-| 方法 | 路径 | 说明 |
-|------|------|------|
-| `createRelationship` | `POST /api/v1/relationships` | 发起关系请求（可选传 `relationType`，默认 COUPLE） |
-| `getReceived` | `GET /api/v1/relationships/received` | 收到的关系请求 |
-| `getSent` | `GET /api/v1/relationships/sent` | 发送的关系请求 |
-| `confirmRelationship` | `PUT /api/v1/relationships/{id}/confirm` | 确认关系 |
-| `dissolveRelationship` | `DELETE /api/v1/relationships/{id}` | 解除关系 |
-| `getMyRelationship` | `GET /api/v1/relationships/me` | 获取我的关系 |
-| `getPartnerInfo` | `GET /api/v1/relationships/user/{userId}/partner` | 获取伴侣信息 |
-| `getScores` | `GET /api/v1/relationships/{id}/scores` | 查看好感度 |
-| `score` | `POST /api/v1/relationships/{id}/scores` | 打分 |
-| `getScoreItems` | `GET /api/v1/relationships/{id}/score-items` | 加减分项列表 |
-| `createScoreItem` | `POST /api/v1/relationships/{id}/score-items` | 创建加减分项 |
-| `updateScoreItem` | `PUT /api/v1/relationships/{id}/score-items/{itemId}` | 修改加减分项 |
-| `deleteScoreItem` | `DELETE /api/v1/relationships/{id}/score-items/{itemId}` | 删除加减分项 |
-| `getScoreRecords` | `GET /api/v1/relationships/{id}/score-records` | 打分记录（分页） |
-
-### 8.3 社区服务 (`xiaobin-community`)
+### 8.2 关系服务 (`xiaobin-relationship`，内部路径前缀 `/relationships`)
 
 | 方法 | 路径 | 说明 |
 |------|------|------|
-| `createPost` | `POST /api/v1/posts` | 发帖 |
-| `getPostList` | `GET /api/v1/posts` | 帖子列表（分页，返回 PostDTO） |
-| `getPost` | `GET /api/v1/posts/{id}` | 帖子详情 |
-| `editPost` | `PUT /api/v1/posts/{id}` | 编辑帖子 |
-| `deletePost` | `DELETE /api/v1/posts/{id}` | 删除帖子 |
-| `likePost` | `POST /api/v1/posts/{id}/likes` | 点赞 |
-| `unlikePost` | `DELETE /api/v1/posts/{id}/likes` | 取消点赞 |
-| `addComment` | `POST /api/v1/posts/{id}/comments` | 发表评论 |
-| `getComments` | `GET /api/v1/posts/{id}/comments` | 评论列表（分页） |
-| `deleteComment` | `DELETE /api/v1/comments/{id}` | 删除评论 |
-| `follow` | `POST /api/v1/users/{id}/follow` | 关注用户 |
-| `unfollow` | `DELETE /api/v1/users/{id}/follow` | 取消关注 |
-| `getFollowStatus` | `GET /api/v1/users/{id}/follow-status` | 查询关注状态（返回 FollowStatusDTO） |
-| `getNotifications` | `GET /api/v1/notifications` | 通知列表（分页，返回 NotificationDTO） |
-| `getUnreadCount` | `GET /api/v1/notifications/unread-count` | 未读通知数 |
-| `markNotificationRead` | `PUT /api/v1/notifications/{id}/read` | 标记通知已读 |
-| `getMyFollowing` | `GET /api/v1/me/following` | 我的关注列表（返回 MyFollowDTO） |
-| `getMyLikes` | `GET /api/v1/me/likes` | 我的点赞帖子列表（返回 MyLikeDTO） |
-| `getMyComments` | `GET /api/v1/me/comments` | 我的评论列表（返回 MyCommentDTO） |
+| `createRelationship` | `POST /relationships` | 发起关系请求（可选传 `relationType`，默认 COUPLE） |
+| `getReceived` | `GET /relationships/received` | 收到的关系请求 |
+| `getSent` | `GET /relationships/sent` | 发送的关系请求 |
+| `confirmRelationship` | `PUT /relationships/{id}/confirm` | 确认关系 |
+| `dissolveRelationship` | `DELETE /relationships/{id}` | 解除关系 |
+| `getMyRelationship` | `GET /relationships/me` | 获取我的关系（返回 RelationshipVO，含对方用户） |
+| `getPartnerInfo` | `GET /relationships/user/{userId}/partner` | 获取用户伴侣信息 |
+| `getScores` | `GET /relationships/{id}/scores` | 查看好感度 |
+| `score` | `POST /relationships/{id}/scores` | 打分 |
+| `getScoreItems` | `GET /relationships/{id}/score-items` | 加减分项列表 |
+| `createScoreItem` | `POST /relationships/{id}/score-items` | 创建加减分项 |
+| `updateScoreItem` | `PUT /relationships/{id}/score-items/{itemId}` | 修改加减分项 |
+| `deleteScoreItem` | `DELETE /relationships/{id}/score-items/{itemId}` | 删除加减分项 |
+| `getScoreRecords` | `GET /relationships/{id}/score-records` | 打分记录（分页） |
 
-> 文件上传接口（`/files/upload`）不通过 Feign 暴露，使用 `MultipartFile` 需直接调用。
-
-### 8.4 聊天服务 (`xiaobin-chat`)
+### 8.3 社区服务 (`xiaobin-community`，内部路径无前缀)
 
 | 方法 | 路径 | 说明 |
 |------|------|------|
-| `getConversations` | `GET /api/v1/chat/conversations` | 会话列表 |
-| `createConversation` | `POST /api/v1/chat/conversations` | 创建会话（幂等，仅互关） |
-| `getMessages` | `GET /api/v1/chat/conversations/{id}/messages` | 消息历史（分页，倒序） |
-| `sendMessage` | `POST /api/v1/chat/conversations/{id}/messages` | 发送消息（可选传 `messageType` 默认 TEXT，VOICE 需传 `duration`） |
-| `markAsRead` | `PUT /api/v1/chat/conversations/{id}/read` | 标记已读 |
+| `createPost` | `POST /posts` | 发帖 |
+| `getPostList` | `GET /posts` | 帖子列表（分页，返回 PostDTO） |
+| `getPost` | `GET /posts/{id}` | 帖子详情 |
+| `editPost` | `PUT /posts/{id}` | 编辑帖子 |
+| `deletePost` | `DELETE /posts/{id}` | 删除帖子 |
+| `likePost` | `POST /posts/{id}/likes` | 点赞 |
+| `unlikePost` | `DELETE /posts/{id}/likes` | 取消点赞 |
+| `addComment` | `POST /posts/{id}/comments` | 发表评论 |
+| `getComments` | `GET /posts/{id}/comments` | 评论列表（分页） |
+| `deleteComment` | `DELETE /comments/{id}` | 删除评论 |
+| `follow` | `POST /users/{id}/follow` | 关注用户 |
+| `unfollow` | `DELETE /users/{id}/follow` | 取消关注 |
+| `getFollowStatus` | `GET /users/{id}/follow-status` | 查询关注状态（返回 FollowStatusDTO） |
+| `getNotifications` | `GET /notifications` | 通知列表（分页，返回 NotificationDTO） |
+| `getUnreadCount` | `GET /notifications/unread-count` | 未读通知数 |
+| `markNotificationRead` | `PUT /notifications/{id}/read` | 标记通知已读 |
+| `getMyFollowing` | `GET /me/following` | 我的关注列表（返回 MyFollowDTO） |
+| `getMyLikes` | `GET /me/likes` | 我的点赞帖子列表（返回 MyLikeDTO） |
+| `getMyComments` | `GET /me/comments` | 我的评论列表（返回 MyCommentDTO） |
+| `uploadFile` | `POST /files/upload` | 单文件上传（multipart，返回URL） |
+| `uploadFiles` | `POST /files/upload-batch` | 批量上传（multipart，返回URL列表） |
+
+### 8.4 聊天服务 (`xiaobin-chat`，内部路径前缀 `/chat`)
+
+| 方法 | 路径 | 说明 |
+|------|------|------|
+| `getConversations` | `GET /chat/conversations` | 会话列表 |
+| `createConversation` | `POST /chat/conversations` | 创建会话（幂等，仅互关） |
+| `getMessages` | `GET /chat/conversations/{id}/messages` | 消息历史（分页，倒序） |
+| `sendMessage` | `POST /chat/conversations/{id}/messages` | 发送消息（可选传 `messageType` 默认 TEXT，VOICE 需传 `duration`） |
+| `markAsRead` | `PUT /chat/conversations/{id}/read` | 标记已读 |
 
 ### 使用示例
 
@@ -842,10 +840,9 @@ com.xml.xiaobinnode.api
 @Autowired
 private UserFeignClient userFeignClient;
 
-// 调用（传递用户ID上下文）
-Result<UserVO> result = userFeignClient.getUserById(1L);
-UserVO user = result.getData();
+// 调用（Feign 返回裸数据；统一 Result 封装由 xiaobin-api 对外完成）
+UserProfileVO user = userFeignClient.getUserById(1L);
 
 // 批量查询
-Result<List<UserVO>> batchResult = userFeignClient.getUsersByIds(List.of(1L, 2L, 3L));
+List<UserVO> batch = userFeignClient.getUsersByIds(List.of(1L, 2L, 3L));
 ```

@@ -48,8 +48,12 @@
                     └──────┬──────┘
                            │
                     ┌──────▼──────┐
-                    │   Gateway   │  ← 统一入口，JWT认证，路由转发
+                    │   Gateway   │  ← 统一入口，JWT认证，路由 /api/**、/region/**
                     │   :8080     │
+                    └──────┬──────┘
+                           │
+                    ┌──────▼──────┐
+                    │ xiaobin-api  │  ← 聚合服务 :8090：统一封装 Result，Feign 转发
                     └──────┬──────┘
                            │
           ┌────────────────┼────────────────┐
@@ -77,6 +81,10 @@
     │  └──────────────────┘                       │
     └─────────────────────────────────────────────┘
 ```
+
+> **路径约定**：对外统一入口走 `网关(:8080) /api/v1/**` → `xiaobin-api(:8090)` 聚合转发。
+> 各业务服务（user/chat/community/relationship）的 Controller 不再带 `/api`、`/v1` 前缀（如 `/users`、`/chat`），仅作为 Feign 内部调用目标；
+> `/api` 与 `/v1` 只保留在 `xiaobin-api` 的对外 Controller 上。返回封装（`Result`）统一在 `xiaobin-api` 完成，网关不再包装。
 
 ---
 
@@ -110,15 +118,31 @@ xiaobin-node/
 │           ├── JwtUtils.java        # JWT工具类
 │           └── UserContext.java     # 用户上下文（ThreadLocal）
 │
-├── xiaobin-api/                     # Feign接口模块（库）
-│   └── src/main/java/.../api/
-│       ├── user/UserFeignClient.java
-│       └── relationship/RelationshipFeignClient.java
+├── xiaobin-api/                     # 聚合API服务 (:8090)
+│   └── src/main/java/.../
+│       ├── api/ApiApplication.java  # 启动类
+│       ├── api/controller/          # 对外聚合 Controller（/api/v1/**，统一封装 Result）
+│       │   ├── AuthAggController.java
+│       │   ├── UserAggController.java
+│       │   ├── ChatAggController.java
+│       │   ├── RelationshipAggController.java
+│       │   ├── CommunityAggController.java
+│       │   ├── DictAggController.java
+│       │   ├── RegionAggController.java
+│       │   └── FileAggController.java
+│       └── api/feign/               # 各业务服务的 Feign 客户端
+│           ├── auth/AuthFeignClient.java
+│           ├── user/UserFeignClient.java
+│           ├── chat/ChatFeignClient.java
+│           ├── relationship/RelationshipFeignClient.java
+│           ├── community/CommunityFeignClient.java
+│           ├── dict/DictFeignClient.java
+│           └── region/RegionFeignClient.java
 │
-├── xiaobin-gateway/                 # API网关服务 (:8080)
+├── xiaobin-gateway/                 # API网关服务 (:8080) 只做 JWT认证+路由
 │   └── src/main/java/.../gateway/
 │       ├── GatewayApplication.java
-│       ├── config/GatewayConfig.java # 路由 + CORS配置
+│       ├── config/GatewayConfig.java # 路由（/api/**、/region/** → lb://xiaobin-api）+ CORS
 │       └── filter/AuthFilter.java    # JWT认证过滤器
 │
 ├── xiaobin-user/                    # 用户服务 (:8081)
@@ -364,7 +388,8 @@ xiaobin-node/
 
 **4. 心跳：**
 ```json
-{"type": "PING"}  →  {"type": "PONG"}
+{"type": "PING"}
+{"type": "PONG"}
 ```
 
 ---

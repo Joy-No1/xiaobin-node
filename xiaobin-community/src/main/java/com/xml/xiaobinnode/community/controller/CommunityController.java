@@ -1,6 +1,6 @@
 package com.xml.xiaobinnode.community.controller;
 
-import com.xml.xiaobinnode.api.community.dto.FollowStatusDTO;
+import com.xml.xiaobinnode.common.dto.FollowStatusDTO;
 import com.xml.xiaobinnode.common.dto.PageResult;
 import com.xml.xiaobinnode.common.util.UserContext;
 import com.xml.xiaobinnode.community.document.Comment;
@@ -21,7 +21,6 @@ import java.util.List;
 
 @Tag(name = "社区接口", description = "广场发帖、评论、点赞、关注、文件上传")
 @RestController
-@RequestMapping("/api/v1")
 @RequiredArgsConstructor
 public class CommunityController {
 

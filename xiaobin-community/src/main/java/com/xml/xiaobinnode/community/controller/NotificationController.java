@@ -1,6 +1,6 @@
 package com.xml.xiaobinnode.community.controller;
 
-import com.xml.xiaobinnode.api.community.dto.NotificationDTO;
+import com.xml.xiaobinnode.common.dto.NotificationDTO;
 import com.xml.xiaobinnode.common.dto.PageResult;
 import com.xml.xiaobinnode.common.util.UserContext;
 import com.xml.xiaobinnode.community.service.NotificationService;
@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.*;
 
 @Tag(name = "通知接口", description = "关注通知、未读通知")
 @RestController
-@RequestMapping("/api/v1/notifications")
+@RequestMapping("/notifications")
 @RequiredArgsConstructor
 public class NotificationController {
 

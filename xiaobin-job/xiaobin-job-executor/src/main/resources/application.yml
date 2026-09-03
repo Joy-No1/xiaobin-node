@@ -1,6 +1,8 @@
 spring:
   application:
     name: xiaobin-job-executor
+  main:
+    allow-bean-definition-overriding: true
   cloud:
     nacos:
       config:
@@ -26,7 +28,7 @@ mybatis-plus:
 xxl:
   job:
     admin:
-      addresses: http://127.0.0.1:8088/xxl-job-admin
+      addresses: http://127.0.0.1:8088/xiaobin-job-admin
     executor:
       appname: xiaobin-job
       port: 9999

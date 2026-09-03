@@ -1,7 +1,7 @@
 package com.xml.xiaobinnode.community.service.impl;
 
-import com.xml.xiaobinnode.api.community.dto.NotificationDTO;
-import com.xml.xiaobinnode.api.user.UserFeignClient;
+import com.xml.xiaobinnode.common.dto.NotificationDTO;
+import com.xml.xiaobinnode.api.feign.user.UserFeignClient;
 import com.xml.xiaobinnode.common.dto.PageResult;
 import com.xml.xiaobinnode.common.dto.UserVO;
 import com.xml.xiaobinnode.common.exception.BusinessException;

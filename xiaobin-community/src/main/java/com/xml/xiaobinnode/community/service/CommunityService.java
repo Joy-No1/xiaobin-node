@@ -1,6 +1,6 @@
 package com.xml.xiaobinnode.community.service;
 
-import com.xml.xiaobinnode.api.community.dto.FollowStatusDTO;
+import com.xml.xiaobinnode.common.dto.FollowStatusDTO;
 import com.xml.xiaobinnode.common.dto.PageResult;
 import com.xml.xiaobinnode.community.document.Comment;
 import com.xml.xiaobinnode.community.document.Post;

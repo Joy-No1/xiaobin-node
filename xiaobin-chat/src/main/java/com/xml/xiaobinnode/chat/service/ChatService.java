@@ -1,7 +1,7 @@
 package com.xml.xiaobinnode.chat.service;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.xml.xiaobinnode.api.chat.dto.ConversationDTO;
+import com.xml.xiaobinnode.common.dto.ConversationDTO;
 import com.xml.xiaobinnode.chat.entity.ChatMessage;
 import com.xml.xiaobinnode.chat.entity.Conversation;
 
