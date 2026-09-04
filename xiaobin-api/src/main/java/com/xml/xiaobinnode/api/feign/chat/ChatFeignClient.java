@@ -7,6 +7,8 @@ import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * 聊天服务 Feign 接口
@@ -42,4 +44,20 @@ public interface ChatFeignClient {
     @PutMapping("/conversations/{id}/read")
     void markAsRead(@RequestHeader("X-User-Id") Long userId,
                     @PathVariable("id") String conversationId);
+
+    /** 检查单个用户在线状态 */
+    @GetMapping("/online/check/{userId}")
+    Map<String, Object> checkOnline(@PathVariable("userId") Long userId);
+
+    /** 批量检查用户在线状态 */
+    @PostMapping("/online/batch-check")
+    Map<Long, Boolean> batchCheckOnline(@RequestBody List<Long> userIds);
+
+    /** 获取在线用户数量 */
+    @GetMapping("/online/count")
+    Map<String, Object> getOnlineCount();
+
+    /** 获取用户的所有连接（多端登录） */
+    @GetMapping("/online/connections/{userId}")
+    Map<String, Object> getUserConnections(@PathVariable("userId") Long userId);
 }

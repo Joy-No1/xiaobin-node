@@ -3,6 +3,7 @@ package com.xml.xiaobinnode.chat.websocket;
 import cn.hutool.json.JSONUtil;
 import com.xml.xiaobinnode.chat.entity.ChatMessage;
 import com.xml.xiaobinnode.chat.service.ChatService;
+import com.xml.xiaobinnode.chat.service.OnlineStatusService;
 import com.xml.xiaobinnode.common.constant.CommonConstants;
 import com.xml.xiaobinnode.common.util.JwtUtils;
 import io.netty.channel.Channel;
@@ -18,7 +19,6 @@ import org.springframework.stereotype.Component;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.TimeUnit;
 
 /**
  * Netty WebSocket 消息处理器
@@ -31,6 +31,7 @@ public class ChatWebSocketHandler extends SimpleChannelInboundHandler<TextWebSoc
 
     private final ChatService chatService;
     private final RedisTemplate<String, String> redisTemplate;
+    private final OnlineStatusService onlineStatusService;
 
     /** Channel -> userId 映射 */
     private static final ConcurrentHashMap<Channel, Long> CHANNEL_USER_MAP = new ConcurrentHashMap<>();
@@ -74,14 +75,13 @@ public class ChatWebSocketHandler extends SimpleChannelInboundHandler<TextWebSoc
             log.info("用户认证成功: userId={}", userId);
 
             Long uid = Long.valueOf(userId);
+            String connectionId = ctx.channel().id().asLongText();
+
             CHANNEL_USER_MAP.put(ctx.channel(), uid);
             USER_CHANNEL_MAP.put(uid, ctx.channel());
 
-            // 标记在线
-            redisTemplate.opsForValue().set(
-                    CommonConstants.REDIS_ONLINE_KEY + userId, "1",
-                    30, TimeUnit.MINUTES
-            );
+            // 使用在线状态服务管理（心跳 + TTL）
+            onlineStatusService.userOnline(uid, connectionId);
 
             sendMessage(ctx, Map.of("type", "AUTH_SUCCESS", "userId", userId));
         } catch (Exception e) {
@@ -111,6 +111,7 @@ public class ChatWebSocketHandler extends SimpleChannelInboundHandler<TextWebSoc
             sendMessage(ctx, Map.of(
                     "type", "MESSAGE_SENT",
                     "messageId", chatMessage.getId(),
+                    "conversationId", chatMessage.getConversationId(),
                     "createdAt", chatMessage.getCreatedAt().toString()
             ));
 
@@ -120,10 +121,11 @@ public class ChatWebSocketHandler extends SimpleChannelInboundHandler<TextWebSoc
                 sendMessage(receiverChannel, Map.of(
                         "type", "NEW_MESSAGE",
                         "messageId", chatMessage.getId(),
+                        "conversationId", chatMessage.getConversationId(),
                         "senderId", senderId,
                         "content", content,
                         "messageType", messageType,
-                        "duration", duration,
+                        "duration", duration != null ? duration : 0,
                         "createdAt", chatMessage.getCreatedAt().toString()
                 ));
             }
@@ -136,6 +138,12 @@ public class ChatWebSocketHandler extends SimpleChannelInboundHandler<TextWebSoc
      * 处理心跳
      */
     private void handlePing(ChannelHandlerContext ctx) {
+        Long userId = CHANNEL_USER_MAP.get(ctx.channel());
+        if (userId != null) {
+            String connectionId = ctx.channel().id().asLongText();
+            // 刷新在线状态的TTL
+            onlineStatusService.refreshOnlineStatus(userId, connectionId);
+        }
         sendMessage(ctx, Map.of("type", "PONG"));
     }
 
@@ -144,8 +152,10 @@ public class ChatWebSocketHandler extends SimpleChannelInboundHandler<TextWebSoc
         Long userId = CHANNEL_USER_MAP.remove(ctx.channel());
         if (userId != null) {
             USER_CHANNEL_MAP.remove(userId);
-            redisTemplate.delete(CommonConstants.REDIS_ONLINE_KEY + userId);
-            log.info("用户离线: userId={}", userId);
+            String connectionId = ctx.channel().id().asLongText();
+            // 用户离线（会检查是否还有其他连接）
+            onlineStatusService.userOffline(userId, connectionId);
+            log.info("用户断开连接: userId={}, connectionId={}", userId, connectionId);
         }
     }
 
@@ -181,5 +191,15 @@ public class ChatWebSocketHandler extends SimpleChannelInboundHandler<TextWebSoc
             return true;
         }
         return false;
+    }
+
+    /**
+     * 获取指定用户的Channel（供Service层本地推送使用）
+     *
+     * @param userId 用户ID
+     * @return Channel，不在线返回null
+     */
+    public static Channel getUserChannel(Long userId) {
+        return USER_CHANNEL_MAP.get(userId);
     }
 }

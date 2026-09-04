@@ -1,5 +1,6 @@
 package com.xml.xiaobinnode.chat.service.impl;
 
+import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -12,9 +13,12 @@ import com.xml.xiaobinnode.chat.mapper.ChatMessageMapper;
 import com.xml.xiaobinnode.chat.mapper.ConversationMapper;
 import com.xml.xiaobinnode.chat.mapper.ConversationMemberMapper;
 import com.xml.xiaobinnode.chat.service.ChatService;
+import com.xml.xiaobinnode.chat.websocket.ChatWebSocketHandler;
 import com.xml.xiaobinnode.common.constant.CommonConstants;
 import com.xml.xiaobinnode.common.dto.UserVO;
 import com.xml.xiaobinnode.common.exception.BusinessException;
+import io.netty.channel.Channel;
+import io.netty.handler.codec.http.websocketx.TextWebSocketFrame;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DuplicateKeyException;
@@ -25,6 +29,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -71,7 +76,114 @@ public class ChatServiceImpl implements ChatService {
         // 接收方未读数 +1
         incrementUnread(conversation.getId(), receiverId);
 
+        // 推送消息给接收者（Redis发布订阅 + 本地兜底）
+        pushMessageToReceiver(message, senderId, receiverId);
+
         return message;
+    }
+
+    /**
+     * 推送消息给接收者
+     * 策略：优先使用Redis发布订阅（支持多实例），Redis失败时本地直接推送兜底
+     */
+    private void pushMessageToReceiver(ChatMessage message, Long senderId, Long receiverId) {
+        Map<String, Object> pushMsg = new LinkedHashMap<>();
+        pushMsg.put("type", "NEW_MESSAGE");
+        pushMsg.put("messageId", message.getId());
+        pushMsg.put("conversationId", message.getConversationId());
+        pushMsg.put("senderId", senderId);
+        pushMsg.put("content", message.getContent());
+        pushMsg.put("messageType", message.getMessageType());
+        pushMsg.put("duration", message.getDuration() != null ? message.getDuration() : 0);
+        pushMsg.put("createdAt", message.getCreatedAt().toString());
+        pushMsg.put("receiverId", receiverId);
+
+        String jsonMessage = JSONUtil.toJsonStr(pushMsg);
+
+        try {
+            // 优先使用Redis发布订阅（支持多实例部署）
+            redisTemplate.convertAndSend(CommonConstants.REDIS_CHANNEL_CHAT_MESSAGE, jsonMessage);
+            log.debug("消息已发布到Redis频道: receiverId={}, messageId={}", receiverId, message.getId());
+        } catch (Exception e) {
+            // Redis发布失败时，本地直接推送兜底
+            log.warn("Redis发布消息失败，使用本地推送兜底: receiverId={}", receiverId, e);
+            boolean sent = localPushToReceiver(receiverId, jsonMessage);
+            if (sent) {
+                log.info("本地推送成功: receiverId={}, messageId={}", receiverId, message.getId());
+            } else {
+                log.debug("用户不在线，消息将在下次拉取时获取: receiverId={}", receiverId);
+            }
+        }
+
+        // 推送会话更新通知（给发送者和接收者）
+        pushConversationUpdate(message, senderId, receiverId);
+    }
+
+    /**
+     * 推送会话更新通知
+     * 当有新消息时，通知双方更新会话列表
+     */
+    private void pushConversationUpdate(ChatMessage message, Long senderId, Long receiverId) {
+        Conversation conversation = conversationMapper.selectById(message.getConversationId());
+        if (conversation == null) {
+            return;
+        }
+
+        // 获取发送者和接收者的未读数
+        ConversationMember senderMember = memberMapper.selectOne(
+                new LambdaQueryWrapper<ConversationMember>()
+                        .eq(ConversationMember::getConversationId, conversation.getId())
+                        .eq(ConversationMember::getUserId, senderId));
+
+        ConversationMember receiverMember = memberMapper.selectOne(
+                new LambdaQueryWrapper<ConversationMember>()
+                        .eq(ConversationMember::getConversationId, conversation.getId())
+                        .eq(ConversationMember::getUserId, receiverId));
+
+        // 给发送者推送（未读数为0）
+        Map<String, Object> senderUpdate = buildConversationUpdateMessage(
+                conversation, senderMember != null ? senderMember.getUnreadCount() : 0);
+        publishConversationUpdate(senderId, senderUpdate);
+
+        // 给接收者推送（未读数+1）
+        Map<String, Object> receiverUpdate = buildConversationUpdateMessage(
+                conversation, receiverMember != null ? receiverMember.getUnreadCount() : 0);
+        publishConversationUpdate(receiverId, receiverUpdate);
+    }
+
+    private Map<String, Object> buildConversationUpdateMessage(Conversation conversation, Integer unreadCount) {
+        Map<String, Object> update = new LinkedHashMap<>();
+        update.put("type", "CONVERSATION_UPDATED");
+        update.put("conversationId", conversation.getId());
+        update.put("lastMessageId", conversation.getLastMessageId());
+        update.put("lastMessage", conversation.getLastMessage());
+        update.put("lastMessageTime", conversation.getLastMessageTime() != null ?
+                conversation.getLastMessageTime().toString() : null);
+        update.put("unreadCount", unreadCount);
+        return update;
+    }
+
+    private void publishConversationUpdate(Long userId, Map<String, Object> updateMsg) {
+        String jsonMessage = JSONUtil.toJsonStr(updateMsg);
+        try {
+            // 通过Redis发布（支持多实例）
+            redisTemplate.convertAndSend(CommonConstants.REDIS_CHANNEL_CHAT_MESSAGE, jsonMessage);
+        } catch (Exception e) {
+            // 兜底：本地直接推送
+            localPushToReceiver(userId, jsonMessage);
+        }
+    }
+
+    /**
+     * 本地直接推送（兜底方案，仅推送给当前实例的在线用户）
+     */
+    private boolean localPushToReceiver(Long receiverId, String jsonMessage) {
+        Channel channel = ChatWebSocketHandler.getUserChannel(receiverId);
+        if (channel != null && channel.isActive()) {
+            channel.writeAndFlush(new TextWebSocketFrame(jsonMessage));
+            return true;
+        }
+        return false;
     }
 
     @Override
