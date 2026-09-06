@@ -130,11 +130,14 @@ public class UserServiceImpl implements UserService {
             user.setLocationId(String.valueOf(location.getId()));
         }
 
-        if (ObjectUtils.allNotNull(locationId, location)) {
+        // 更新已存在的地址信息
+        if (ObjectUtils.allNotNull(locationId, location) && hasLocationData(location)) {
             Location dbLocation = locationMapper.selectById(locationId);
             if (Objects.nonNull(dbLocation)) {
-                BeanUtils.copyProperties(location, dbLocation);
-                dbLocation.setId(locationId);
+                // 只更新地址字段，不复制id
+                if (location.getProvince() != null) dbLocation.setProvince(location.getProvince());
+                if (location.getCity() != null) dbLocation.setCity(location.getCity());
+                if (location.getDistrict() != null) dbLocation.setDistrict(location.getDistrict());
                 locationMapper.updateById(dbLocation);
             }
         }
@@ -143,6 +146,8 @@ public class UserServiceImpl implements UserService {
         if (updateUser.getBio() != null) user.setBio(updateUser.getBio());
         if (updateUser.getGender() != null) user.setGender(updateUser.getGender());
         if (updateUser.getAvatarUrl() != null) user.setAvatarUrl(updateUser.getAvatarUrl());
+        if (updateUser.getProfileBackgroundUrl() != null) user.setProfileBackgroundUrl(updateUser.getProfileBackgroundUrl());
+        if (updateUser.getEmail() != null) user.setEmail(updateUser.getEmail());
         if (updateUser.getBirthday() != null) user.setBirthday(updateUser.getBirthday());
         if (updateUser.getCompany() != null) user.setCompany(updateUser.getCompany());
         if (updateUser.getSchool() != null) user.setSchool(updateUser.getSchool());
@@ -249,6 +254,7 @@ public class UserServiceImpl implements UserService {
         vo.setEmail(user.getEmail());
         vo.setNickname(user.getNickname());
         vo.setAvatarUrl(user.getAvatarUrl());
+        vo.setProfileBackgroundUrl(user.getProfileBackgroundUrl());
         vo.setGender(user.getGender());
         vo.setBio(user.getBio());
         vo.setStatus(user.getStatus());

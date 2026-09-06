@@ -3,6 +3,7 @@ package com.xml.xiaobinnode.api.controller;
 import com.xml.xiaobinnode.api.feign.user.UserFeignClient;
 import com.xml.xiaobinnode.common.dto.Result;
 import com.xml.xiaobinnode.common.dto.UserProfileVO;
+import com.xml.xiaobinnode.common.dto.UserUpdateDTO;
 import com.xml.xiaobinnode.common.dto.UserVO;
 import com.xml.xiaobinnode.common.util.UserContext;
 import io.swagger.v3.oas.annotations.Operation;
@@ -11,7 +12,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Map;
 
 /**
  * 聚合-用户（当前用户信息 / 主页 / 查找 / 批量）
@@ -33,7 +33,7 @@ public class UserAggController {
 
     @PutMapping("/me")
     @Operation(summary = "更新当前用户信息")
-    public Result<Object> updateCurrentUser(@RequestBody Map<String, Object> userDTO) {
+    public Result<UserVO> updateCurrentUser(@RequestBody UserUpdateDTO userDTO) {
         Long userId = Long.valueOf(UserContext.getUserId());
         return Result.success(userFeignClient.updateCurrentUser(userId, userDTO));
     }

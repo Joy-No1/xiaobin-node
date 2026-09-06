@@ -27,6 +27,9 @@ public class UserVO {
     /** 头像URL */
     private String avatarUrl;
 
+    /** 主页背景图URL */
+    private String profileBackgroundUrl;
+
     /** 性别: MALE/FEMALE/OTHER */
     private String gender;
 

@@ -1,12 +1,12 @@
 package com.xml.xiaobinnode.api.feign.user;
 
 import com.xml.xiaobinnode.common.dto.UserProfileVO;
+import com.xml.xiaobinnode.common.dto.UserUpdateDTO;
 import com.xml.xiaobinnode.common.dto.UserVO;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Map;
 
 /**
  * 用户服务 Feign 接口
@@ -22,11 +22,11 @@ public interface UserFeignClient {
     UserVO getCurrentUser(@RequestHeader("X-User-Id") Long userId);
 
     /**
-     * 更新当前用户信息（body 为 {user, location}，原样透传）
+     * 更新当前用户信息
      */
     @PutMapping("/me")
-    Object updateCurrentUser(@RequestHeader("X-User-Id") Long userId,
-                             @RequestBody Map<String, Object> userDTO);
+    UserVO updateCurrentUser(@RequestHeader("X-User-Id") Long userId,
+                             @RequestBody UserUpdateDTO userDTO);
 
     /**
      * 根据ID获取用户（user 模块返回 UserProfileVO：含关注状态）

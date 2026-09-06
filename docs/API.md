@@ -216,16 +216,33 @@ Content-Type: application/json
 **请求体**
 ```json
 {
-    "nickname": "新昵称",
-    "avatarUrl": "https://...",
-    "gender": "MALE",
-    "bio": "个人简介",
-    "birthday": "1990-01-01",
-    "province": "广东省",
-    "city": "深圳市",
-    "district": "南山区"
+    "user": {
+        "nickname": "新昵称",
+        "email": "newemail@example.com",
+        "avatarUrl": "https://...",
+        "profileBackgroundUrl": "https://...",
+        "gender": "MALE",
+        "bio": "个人简介",
+        "birthday": "1990-01-01",
+        "company": "公司名称",
+        "school": "学校名称",
+        "height": 175.0,
+        "weight": 65.0,
+        "education": "本科"
+    },
+    "location": {
+        "province": "广东省",
+        "city": "深圳市",
+        "district": "南山区"
+    }
 }
 ```
+
+**说明**：
+- 所有字段都是可选的，只传需要更新的字段
+- `email` 字段需要唯一，如果已被其他用户使用会报错
+
+**响应**: 返回更新后的用户信息
 
 ### 2.3 查看其他用户信息
 ```http

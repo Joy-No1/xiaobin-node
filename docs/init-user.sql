@@ -15,6 +15,7 @@ CREATE TABLE IF NOT EXISTS `user` (
     `password`    VARCHAR(255) NOT NULL COMMENT '密码（加密）',
     `nickname`    VARCHAR(50)  NOT NULL COMMENT '昵称',
     `avatar_url`  VARCHAR(500) DEFAULT '' COMMENT '头像URL',
+    `profile_background_url` VARCHAR(500) DEFAULT '' COMMENT '主页背景图URL',
     `gender`      VARCHAR(10)  DEFAULT NULL COMMENT '性别: MALE/FEMALE/OTHER',
     `birthday`    TIMESTAMP    NULL DEFAULT NULL COMMENT '生日',
     `company`     VARCHAR(255) DEFAULT NULL COMMENT '公司',

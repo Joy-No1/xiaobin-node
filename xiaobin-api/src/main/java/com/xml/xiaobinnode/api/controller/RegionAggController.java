@@ -18,7 +18,7 @@ import java.util.List;
  */
 @Tag(name = "聚合-行政区划")
 @RestController
-@RequestMapping("/region")
+@RequestMapping("/api/v1/region")
 @RequiredArgsConstructor
 public class RegionAggController {
 
