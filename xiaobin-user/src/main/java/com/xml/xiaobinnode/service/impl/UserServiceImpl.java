@@ -8,15 +8,12 @@ import com.xml.xiaobinnode.common.constant.CommonConstants;
 import com.xml.xiaobinnode.common.dto.UserVO;
 import com.xml.xiaobinnode.common.exception.BusinessException;
 import com.xml.xiaobinnode.common.util.JwtUtils;
-import com.xml.xiaobinnode.dto.LoginRequest;
-import com.xml.xiaobinnode.dto.LoginVO;
-import com.xml.xiaobinnode.dto.RegisterRequest;
-import com.xml.xiaobinnode.dto.UserDTO;
-import com.xml.xiaobinnode.dto.UserProfileVO;
+import com.xml.xiaobinnode.dto.*;
 import com.xml.xiaobinnode.entity.Location;
 import com.xml.xiaobinnode.entity.User;
 import com.xml.xiaobinnode.mapper.LocationMapper;
 import com.xml.xiaobinnode.mapper.UserMapper;
+import com.xml.xiaobinnode.service.UserDeviceService;
 import com.xml.xiaobinnode.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -41,6 +38,7 @@ public class UserServiceImpl implements UserService {
     private final UserMapper userMapper;
     private final LocationMapper locationMapper;
     private final RedisTemplate<String, String> redisTemplate;
+    private final UserDeviceService userDeviceService;
 
     @Autowired
     @Lazy
@@ -68,7 +66,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public LoginVO login(LoginRequest request) {
+    public LoginVO login(LoginRequest request, String ip) {
         LambdaQueryWrapper<User> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(User::getPhone, request.getAccount())
                 .or()
@@ -97,12 +95,21 @@ public class UserServiceImpl implements UserService {
                 TimeUnit.SECONDS
         );
 
+        // 记录设备信息
+        if (request.getDeviceInfo() != null) {
+            userDeviceService.recordDevice(user.getId(), request.getDeviceInfo(), ip);
+        }
+
         user.setPassword(null);
         LoginVO loginVO = new LoginVO();
         loginVO.setToken(token);
         loginVO.setUser(toUserVO(user));
 
-        log.info("用户登录成功: userId={}", user.getId());
+        // 获取用户设备列表
+        String currentDeviceId = request.getDeviceInfo() != null ? request.getDeviceInfo().getDeviceId() : null;
+        loginVO.setDevices(userDeviceService.getUserDevices(user.getId(), currentDeviceId));
+
+        log.info("用户登录成功: userId={}, ip={}, deviceId={}", user.getId(), ip, currentDeviceId);
         return loginVO;
     }
 
@@ -258,6 +265,7 @@ public class UserServiceImpl implements UserService {
         vo.setGender(user.getGender());
         vo.setBio(user.getBio());
         vo.setStatus(user.getStatus());
+        vo.setRealNameVerified(user.getRealNameVerified());
         vo.setBirthday(user.getBirthday());
         vo.setCompany(user.getCompany());
         vo.setSchool(user.getSchool());
@@ -316,5 +324,143 @@ public class UserServiceImpl implements UserService {
             log.warn("获取关注状态失败: currentUserId={}, targetUserId={}", currentUserId, targetUserId, e);
         }
         return null;
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void changePassword(Long userId, ChangePasswordRequest request) {
+        User user = userMapper.selectById(userId);
+        if (user == null) {
+            throw new BusinessException("用户不存在");
+        }
+
+        // 验证旧密码
+        if (!BCrypt.checkpw(request.getOldPassword(), user.getPassword())) {
+            throw new BusinessException("旧密码错误");
+        }
+
+        // 更新新密码
+        user.setPassword(BCrypt.hashpw(request.getNewPassword()));
+        userMapper.updateById(user);
+
+        // 清除Redis中的token，强制重新登录
+        redisTemplate.delete(CommonConstants.REDIS_TOKEN_KEY + userId);
+
+        log.info("用户修改密码成功: userId={}", userId);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void changePhone(Long userId, ChangePhoneRequest request) {
+        User user = userMapper.selectById(userId);
+        if (user == null) {
+            throw new BusinessException("用户不存在");
+        }
+
+        // 验证密码
+        if (!BCrypt.checkpw(request.getPassword(), user.getPassword())) {
+            throw new BusinessException("密码错误");
+        }
+
+        // TODO: 验证短信验证码（需要接入短信服务）
+        // if (!smsService.verifyCode(request.getNewPhone(), request.getVerifyCode())) {
+        //     throw new BusinessException("验证码错误或已过期");
+        // }
+
+        // 检查新手机号是否已被使用
+        LambdaQueryWrapper<User> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(User::getPhone, request.getNewPhone());
+        if (userMapper.selectCount(wrapper) > 0) {
+            throw new BusinessException("该手机号已被使用");
+        }
+
+        // 更新手机号
+        user.setPhone(request.getNewPhone());
+        userMapper.updateById(user);
+
+        log.info("用户更换手机号成功: userId={}, oldPhone={}, newPhone={}",
+                 userId, user.getPhone(), request.getNewPhone());
+    }
+
+    @Override
+    public RealNameStatusVO getRealNameStatus(Long userId) {
+        User user = userMapper.selectById(userId);
+        if (user == null) {
+            throw new BusinessException("用户不存在");
+        }
+
+        RealNameStatusVO vo = new RealNameStatusVO();
+        vo.setVerified(user.getRealNameVerified() != null && user.getRealNameVerified() == 1);
+
+        if (vo.getVerified()) {
+            vo.setRealName(user.getUsername());
+            // 身份证号脱敏：保留前6位和后4位
+            if (user.getIdCard() != null && user.getIdCard().length() == 18) {
+                String idCard = user.getIdCard();
+                vo.setIdCardMasked(idCard.substring(0, 6) + "********" + idCard.substring(14));
+            }
+        }
+
+        return vo;
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void submitRealName(Long userId, RealNameRequest request) {
+        User user = userMapper.selectById(userId);
+        if (user == null) {
+            throw new BusinessException("用户不存在");
+        }
+
+        // 检查是否已实名
+        if (user.getRealNameVerified() != null && user.getRealNameVerified() == 1) {
+            throw new BusinessException("您已完成实名认证，无法重复认证");
+        }
+
+        // 检查身份证号是否已被使用
+        LambdaQueryWrapper<User> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(User::getIdCard, request.getIdCard());
+        if (userMapper.selectCount(wrapper) > 0) {
+            throw new BusinessException("该身份证号已被使用");
+        }
+
+        // TODO: 调用实名认证服务验证身份信息
+        // if (!realNameVerifyService.verify(request.getRealName(), request.getIdCard())) {
+        //     throw new BusinessException("实名认证失败，请检查姓名和身份证号是否正确");
+        // }
+
+        // 更新实名信息
+        user.setUsername(request.getRealName());
+        user.setIdCard(request.getIdCard());
+        user.setRealNameVerified(1);
+        userMapper.updateById(user);
+
+        log.info("用户提交实名认证成功: userId={}, realName={}", userId, request.getRealName());
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void deleteAccount(Long userId, String password) {
+        User user = userMapper.selectById(userId);
+        if (user == null) {
+            throw new BusinessException("用户不存在");
+        }
+
+        // 验证密码
+        if (!BCrypt.checkpw(password, user.getPassword())) {
+            throw new BusinessException("密码错误");
+        }
+
+        // 设置账号为禁用状态（软删除）
+        user.setStatus("DISABLED");
+        userMapper.updateById(user);
+
+        // 清除Redis中的token
+        redisTemplate.delete(CommonConstants.REDIS_TOKEN_KEY + userId);
+
+        // TODO: 清理用户相关数据（帖子、评论、关注关系等）
+        // 可以使用消息队列异步处理
+
+        log.info("用户注销账号: userId={}", userId);
     }
 }

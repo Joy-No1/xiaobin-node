@@ -26,6 +26,9 @@ public class User implements Serializable {
     /** 邮箱 */
     private String email;
 
+    /** 身份证号 */
+    private String idCard;
+
     /** 密码（加密） */
     private String password;
 
@@ -46,6 +49,9 @@ public class User implements Serializable {
 
     /** 状态: ACTIVE/DISABLED */
     private String status;
+
+    /** 是否实名认证：0否 1是 */
+    private Integer realNameVerified;
 
     /** 生日 */
     private Date birthday;

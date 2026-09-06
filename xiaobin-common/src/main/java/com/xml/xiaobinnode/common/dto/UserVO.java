@@ -39,6 +39,9 @@ public class UserVO {
     /** 状态: ACTIVE/DISABLED */
     private String status;
 
+    /** 是否实名认证：0否 1是 */
+    private Integer realNameVerified;
+
     /** 生日 */
     private Date birthday;
 

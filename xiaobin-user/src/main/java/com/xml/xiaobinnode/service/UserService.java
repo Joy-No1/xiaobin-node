@@ -1,11 +1,7 @@
 package com.xml.xiaobinnode.service;
 
 import com.xml.xiaobinnode.common.dto.UserVO;
-import com.xml.xiaobinnode.dto.LoginRequest;
-import com.xml.xiaobinnode.dto.LoginVO;
-import com.xml.xiaobinnode.dto.RegisterRequest;
-import com.xml.xiaobinnode.dto.UserDTO;
-import com.xml.xiaobinnode.dto.UserProfileVO;
+import com.xml.xiaobinnode.dto.*;
 import com.xml.xiaobinnode.entity.Location;
 import com.xml.xiaobinnode.entity.User;
 
@@ -15,7 +11,7 @@ public interface UserService {
 
     User register(RegisterRequest request);
 
-    LoginVO login(LoginRequest request);
+    LoginVO login(LoginRequest request, String ip);
 
     UserDTO getCurrentUserDTO(Long userId);
 
@@ -35,4 +31,19 @@ public interface UserService {
 
     /** 获取用户主页VO（含当前用户对该用户的关注状态） */
     UserProfileVO getUserProfileVO(Long currentUserId, Long targetUserId);
+
+    /** 修改密码 */
+    void changePassword(Long userId, ChangePasswordRequest request);
+
+    /** 更换手机号 */
+    void changePhone(Long userId, ChangePhoneRequest request);
+
+    /** 获取实名认证状态 */
+    RealNameStatusVO getRealNameStatus(Long userId);
+
+    /** 提交实名认证 */
+    void submitRealName(Long userId, RealNameRequest request);
+
+    /** 注销账号 */
+    void deleteAccount(Long userId, String password);
 }

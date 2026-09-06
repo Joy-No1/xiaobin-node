@@ -169,9 +169,23 @@ Content-Type: application/json
 ```json
 {
     "account": "13800138000",
-    "password": "123456"
+    "password": "123456",
+    "deviceInfo": {
+        "deviceId": "uuid-or-fingerprint",
+        "deviceType": "WEB",
+        "deviceName": "Chrome on MacBook Pro",
+        "osName": "macOS",
+        "osVersion": "14.0",
+        "appVersion": "1.0.0",
+        "browser": "Chrome 120.0"
+    }
 }
 ```
+
+**字段说明**：
+- `deviceInfo` 可选，建议传递用于设备管理
+- `deviceType` 可选值：IOS/ANDROID/MAC/WINDOWS/LINUX/WEB
+- `deviceId` 设备唯一标识（UUID或设备指纹）
 
 **响应**
 ```json
@@ -185,13 +199,31 @@ Content-Type: application/json
             "phone": "13800138000",
             "nickname": "小斌",
             "avatarUrl": "",
+            "profileBackgroundUrl": "",
             "gender": "MALE",
             "bio": "这个人很懒什么都没写",
             "birthday": null,
             "province": "广东省",
             "city": "深圳市",
             "district": "南山区"
-        }
+        },
+        "devices": [
+            {
+                "id": 1,
+                "deviceId": "uuid-or-fingerprint",
+                "deviceType": "WEB",
+                "deviceName": "Chrome on MacBook Pro",
+                "osName": "macOS",
+                "osVersion": "14.0",
+                "appVersion": "1.0.0",
+                "browser": "Chrome 120.0",
+                "lastIp": "192.168.1.100",
+                "lastActiveAt": "2026-09-06T17:30:00",
+                "status": 1,
+                "createdAt": "2026-09-01T10:00:00",
+                "isCurrent": true
+            }
+        ]
     }
 }
 ```
@@ -263,6 +295,174 @@ Content-Type: application/json
 ```
 
 **响应**: 返回用户列表
+
+### 2.6 登录设备管理
+
+#### 2.6.1 获取我的设备列表
+```http
+GET /api/v1/users/me/devices?currentDeviceId={当前设备ID}
+```
+
+**响应**：
+```json
+{
+    "code": 200,
+    "data": [
+        {
+            "id": 1,
+            "deviceId": "uuid-xxx",
+            "deviceType": "WEB",
+            "deviceName": "Chrome on MacBook Pro",
+            "osName": "macOS",
+            "osVersion": "14.0",
+            "appVersion": "1.0.0",
+            "browser": "Chrome 120.0",
+            "lastIp": "192.168.1.100",
+            "lastActiveAt": "2026-09-06T17:30:00",
+            "status": 1,
+            "createdAt": "2026-09-01T10:00:00",
+            "isCurrent": true
+        },
+        {
+            "id": 2,
+            "deviceId": "uuid-yyy",
+            "deviceType": "IOS",
+            "deviceName": "iPhone 17 Pro",
+            "osName": "iOS",
+            "osVersion": "18.0",
+            "appVersion": "1.0.0",
+            "browser": null,
+            "lastIp": "192.168.1.101",
+            "lastActiveAt": "2026-09-05T12:00:00",
+            "status": 1,
+            "createdAt": "2026-08-20T09:00:00",
+            "isCurrent": false
+        }
+    ]
+}
+```
+
+**字段说明**：
+- `isCurrent`: 是否当前设备（根据传入的currentDeviceId判断）
+- `status`: 0-禁用，1-正常
+- `lastIp`: 最近访问IP地址
+- `lastActiveAt`: 最近活跃时间
+
+#### 2.6.2 删除设备（退出登录）
+```http
+DELETE /api/v1/users/me/devices/{deviceId}
+```
+
+**说明**：删除指定设备，该设备的登录状态将失效
+
+#### 2.6.3 禁用/启用设备
+```http
+PUT /api/v1/users/me/devices/{deviceId}/status?status={0或1}
+```
+
+**参数**：
+- `status`: 0-禁用，1-启用
+
+**说明**：禁用设备后，该设备无法登录
+
+### 2.7 账号管理
+
+#### 2.7.1 修改密码
+```http
+PUT /api/v1/users/me/password
+Content-Type: application/json
+Authorization: Bearer {token}
+```
+
+**请求体**：
+```json
+{
+    "oldPassword": "123456",
+    "newPassword": "newpass123"
+}
+```
+
+**说明**：修改成功后会清除登录token，需要重新登录
+
+#### 2.7.2 更换手机号
+```http
+PUT /api/v1/users/me/phone
+Content-Type: application/json
+Authorization: Bearer {token}
+```
+
+**请求体**：
+```json
+{
+    "newPhone": "13900139000",
+    "verifyCode": "123456",
+    "password": "当前密码"
+}
+```
+
+**说明**：需要先获取新手机号的验证码（短信服务待接入）
+
+#### 2.7.3 获取实名认证状态
+```http
+GET /api/v1/users/me/real-name
+Authorization: Bearer {token}
+```
+
+**响应**：
+```json
+{
+    "code": 200,
+    "data": {
+        "verified": true,
+        "realName": "张三",
+        "idCardMasked": "110101********1234"
+    }
+}
+```
+
+**字段说明**：
+- `verified`: 是否已实名认证
+- `realName`: 真实姓名（已认证才返回）
+- `idCardMasked`: 身份证号脱敏（保留前6位后4位）
+
+#### 2.7.4 提交实名认证
+```http
+POST /api/v1/users/me/real-name
+Content-Type: application/json
+Authorization: Bearer {token}
+```
+
+**请求体**：
+```json
+{
+    "realName": "张三",
+    "idCard": "110101199001011234"
+}
+```
+
+**说明**：
+- 每个账号只能实名一次，认证后无法修改
+- 同一身份证号只能认证一个账号
+- 实名后用户的username字段会更新为真实姓名
+
+#### 2.7.5 注销账号
+```http
+DELETE /api/v1/users/me
+Content-Type: application/json
+Authorization: Bearer {token}
+```
+
+**请求体**：
+```json
+{
+    "password": "当前密码"
+}
+```
+
+**说明**：
+- 注销后账号状态变为DISABLED
+- 会清除登录token
+- 相关数据会异步清理
 
 ---
 

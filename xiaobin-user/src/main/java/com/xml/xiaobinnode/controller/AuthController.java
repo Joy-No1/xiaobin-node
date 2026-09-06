@@ -8,6 +8,7 @@ import com.xml.xiaobinnode.entity.User;
 import com.xml.xiaobinnode.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
@@ -29,8 +30,26 @@ public class AuthController {
 
     @NoAuth
     @PostMapping("/login")
-    @Operation(summary = "用户登录", description = "手机号/邮箱 + 密码登录，返回JWT Token")
-    public LoginVO login(@Valid @RequestBody LoginRequest request) {
-        return userService.login(request);
+    @Operation(summary = "用户登录", description = "手机号/邮箱 + 密码登录，返回JWT Token和设备信息")
+    public LoginVO login(@Valid @RequestBody LoginRequest request, HttpServletRequest httpRequest) {
+        return userService.login(request, getClientIp(httpRequest));
+    }
+
+    /**
+     * 获取客户端真实IP
+     */
+    private String getClientIp(HttpServletRequest request) {
+        String ip = request.getHeader("X-Forwarded-For");
+        if (ip == null || ip.isEmpty() || "unknown".equalsIgnoreCase(ip)) {
+            ip = request.getHeader("X-Real-IP");
+        }
+        if (ip == null || ip.isEmpty() || "unknown".equalsIgnoreCase(ip)) {
+            ip = request.getRemoteAddr();
+        }
+        // 处理多个代理的情况，取第一个IP
+        if (ip != null && ip.contains(",")) {
+            ip = ip.split(",")[0].trim();
+        }
+        return ip;
     }
 }
