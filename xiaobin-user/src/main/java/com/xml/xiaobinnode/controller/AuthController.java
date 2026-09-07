@@ -1,6 +1,7 @@
 package com.xml.xiaobinnode.controller;
 
 import com.xml.xiaobinnode.common.annotation.NoAuth;
+import com.xml.xiaobinnode.dto.EmailRegisterRequest;
 import com.xml.xiaobinnode.dto.LoginRequest;
 import com.xml.xiaobinnode.dto.LoginVO;
 import com.xml.xiaobinnode.dto.RegisterRequest;
@@ -23,9 +24,16 @@ public class AuthController {
 
     @NoAuth
     @PostMapping("/register")
-    @Operation(summary = "用户注册", description = "手机号注册新用户")
+    @Operation(summary = "手机号注册", description = "手机号注册新用户")
     public User register(@Valid @RequestBody RegisterRequest request) {
         return userService.register(request);
+    }
+
+    @NoAuth
+    @PostMapping("/register/email")
+    @Operation(summary = "邮箱注册", description = "邮箱验证码注册新用户")
+    public User registerByEmail(@Valid @RequestBody EmailRegisterRequest request) {
+        return userService.registerByEmail(request);
     }
 
     @NoAuth

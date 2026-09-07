@@ -13,6 +13,7 @@ import com.xml.xiaobinnode.entity.Location;
 import com.xml.xiaobinnode.entity.User;
 import com.xml.xiaobinnode.mapper.LocationMapper;
 import com.xml.xiaobinnode.mapper.UserMapper;
+import com.xml.xiaobinnode.service.EmailVerifyCodeService;
 import com.xml.xiaobinnode.service.UserDeviceService;
 import com.xml.xiaobinnode.service.UserService;
 import lombok.RequiredArgsConstructor;
@@ -39,6 +40,7 @@ public class UserServiceImpl implements UserService {
     private final LocationMapper locationMapper;
     private final RedisTemplate<String, String> redisTemplate;
     private final UserDeviceService userDeviceService;
+    private final EmailVerifyCodeService emailVerifyCodeService;
 
     @Autowired
     @Lazy
@@ -62,6 +64,46 @@ public class UserServiceImpl implements UserService {
         userMapper.insert(user);
 
         log.info("用户注册成功: userId={}, phone={}", user.getId(), user.getPhone());
+        return user;
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public User registerByEmail(EmailRegisterRequest request) {
+        // 验证邮箱验证码
+        if (!emailVerifyCodeService.verifyCode(request.getEmail(), request.getVerifyCode(), "REGISTER")) {
+            throw new BusinessException("验证码错误或已过期");
+        }
+
+        // 检查邮箱是否已注册
+        LambdaQueryWrapper<User> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(User::getEmail, request.getEmail());
+        if (userMapper.selectCount(wrapper) > 0) {
+            throw new BusinessException("该邮箱已注册");
+        }
+
+        // 创建用户
+        User user = new User();
+        user.setEmail(request.getEmail());
+        user.setPassword(BCrypt.hashpw(request.getPassword()));
+
+        // 昵称处理
+        if (request.getNickname() != null && !request.getNickname().isEmpty()) {
+            user.setNickname(request.getNickname());
+        } else {
+            // 自动生成昵称：邮箱前缀
+            String emailPrefix = request.getEmail().split("@")[0];
+            user.setNickname("用户_" + emailPrefix);
+        }
+
+        user.setUsername("user_" + request.getEmail());
+        user.setStatus("ACTIVE");
+        user.setAvatarUrl("");
+        user.setRealNameVerified(0);
+
+        userMapper.insert(user);
+
+        log.info("邮箱注册成功: userId={}, email={}", user.getId(), user.getEmail());
         return user;
     }
 
@@ -380,6 +422,40 @@ public class UserServiceImpl implements UserService {
 
         log.info("用户更换手机号成功: userId={}, oldPhone={}, newPhone={}",
                  userId, user.getPhone(), request.getNewPhone());
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void changeEmail(Long userId, ChangeEmailRequest request) {
+        User user = userMapper.selectById(userId);
+        if (user == null) {
+            throw new BusinessException("用户不存在");
+        }
+
+        // 验证密码
+        if (!BCrypt.checkpw(request.getPassword(), user.getPassword())) {
+            throw new BusinessException("密码错误");
+        }
+
+        // 验证邮箱验证码
+        if (!emailVerifyCodeService.verifyCode(request.getNewEmail(), request.getVerifyCode(), "CHANGE_EMAIL")) {
+            throw new BusinessException("验证码错误或已过期");
+        }
+
+        // 检查新邮箱是否已被使用
+        LambdaQueryWrapper<User> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(User::getEmail, request.getNewEmail());
+        if (userMapper.selectCount(wrapper) > 0) {
+            throw new BusinessException("该邮箱已被使用");
+        }
+
+        // 更新邮箱
+        String oldEmail = user.getEmail();
+        user.setEmail(request.getNewEmail());
+        userMapper.updateById(user);
+
+        log.info("用户更换邮箱成功: userId={}, oldEmail={}, newEmail={}",
+                 userId, oldEmail, request.getNewEmail());
     }
 
     @Override

@@ -85,6 +85,13 @@ public interface UserFeignClient {
                     @RequestBody Map<String, String> request);
 
     /**
+     * 更换邮箱
+     */
+    @PutMapping("/me/email")
+    void changeEmail(@RequestHeader("X-User-Id") Long userId,
+                    @RequestBody Map<String, String> request);
+
+    /**
      * 获取实名认证状态
      */
     @GetMapping("/me/real-name")

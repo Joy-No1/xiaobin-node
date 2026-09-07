@@ -1,6 +1,7 @@
 package com.xml.xiaobinnode.controller;
 
 import com.xml.xiaobinnode.common.util.UserContext;
+import com.xml.xiaobinnode.dto.ChangeEmailRequest;
 import com.xml.xiaobinnode.dto.ChangePasswordRequest;
 import com.xml.xiaobinnode.dto.ChangePhoneRequest;
 import com.xml.xiaobinnode.dto.RealNameRequest;
@@ -37,6 +38,13 @@ public class UserAccountController {
     public void changePhone(@Valid @RequestBody ChangePhoneRequest request) {
         Long userId = Long.valueOf(UserContext.getUserId());
         userService.changePhone(userId, request);
+    }
+
+    @PutMapping("/email")
+    @Operation(summary = "更换邮箱")
+    public void changeEmail(@Valid @RequestBody ChangeEmailRequest request) {
+        Long userId = Long.valueOf(UserContext.getUserId());
+        userService.changeEmail(userId, request);
     }
 
     @GetMapping("/real-name")

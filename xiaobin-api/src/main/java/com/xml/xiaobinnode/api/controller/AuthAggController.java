@@ -13,6 +13,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.Map;
+
 /**
  * 聚合-认证（注册/登录）
  */
@@ -25,9 +27,15 @@ public class AuthAggController {
     private final AuthFeignClient authFeignClient;
 
     @PostMapping("/register")
-    @Operation(summary = "注册")
+    @Operation(summary = "手机号注册")
     public Result<Object> register(@RequestBody RegisterRequest request) {
         return Result.success(authFeignClient.register(request));
+    }
+
+    @PostMapping("/register/email")
+    @Operation(summary = "邮箱注册")
+    public Result<Object> registerByEmail(@RequestBody Map<String, String> request) {
+        return Result.success(authFeignClient.registerByEmail(request));
     }
 
     @PostMapping("/login")

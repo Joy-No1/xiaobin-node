@@ -130,7 +130,7 @@ ws.onmessage = (event) => {
 
 ## 🔐 一、认证模块
 
-### 1.1 注册
+### 1.1 手机号注册
 ```http
 POST /api/v1/auth/register
 Content-Type: application/json
@@ -159,7 +159,79 @@ Content-Type: application/json
 }
 ```
 
-### 1.2 登录
+### 1.2 邮箱注册
+
+**第一步：发送邮箱验证码**
+```http
+POST /api/v1/email/verify-code
+Content-Type: application/json
+```
+
+**请求体**
+```json
+{
+    "email": "user@example.com",
+    "purpose": "REGISTER"
+}
+```
+
+**purpose 可选值：**
+- `REGISTER` - 注册账号
+- `LOGIN` - 登录验证
+- `CHANGE_PASSWORD` - 修改密码
+- `CHANGE_EMAIL` - 更换邮箱
+- `CHANGE_PHONE` - 更换手机号
+- `RESET_PASSWORD` - 重置密码
+
+**响应**
+```json
+{
+    "code": 200,
+    "message": "success",
+    "data": null
+}
+```
+
+**说明：**
+- 验证码有效期 5 分钟
+- 同一邮箱 60 秒内只能发送一次
+- 验证码为 6 位数字
+
+**第二步：使用验证码注册**
+```http
+POST /api/v1/auth/register/email
+Content-Type: application/json
+```
+
+**请求体**
+```json
+{
+    "email": "user@example.com",
+    "verifyCode": "123456",
+    "password": "mypassword123",
+    "nickname": "昵称（可选）"
+}
+```
+
+**响应**
+```json
+{
+    "code": 200,
+    "message": "success",
+    "data": {
+        "id": 1,
+        "username": "user_user@example.com",
+        "nickname": "用户_user",
+        "email": "user@example.com"
+    }
+}
+```
+
+**说明：**
+- `nickname` 可选，不填则自动生成（用户_邮箱前缀）
+- 验证码验证后会自动失效（一次性使用）
+
+### 1.3 登录
 ```http
 POST /api/v1/auth/login
 Content-Type: application/json

@@ -11,6 +11,8 @@ public interface UserService {
 
     User register(RegisterRequest request);
 
+    User registerByEmail(EmailRegisterRequest request);
+
     LoginVO login(LoginRequest request, String ip);
 
     UserDTO getCurrentUserDTO(Long userId);
@@ -37,6 +39,9 @@ public interface UserService {
 
     /** 更换手机号 */
     void changePhone(Long userId, ChangePhoneRequest request);
+
+    /** 更换邮箱 */
+    void changeEmail(Long userId, ChangeEmailRequest request);
 
     /** 获取实名认证状态 */
     RealNameStatusVO getRealNameStatus(Long userId);

@@ -7,14 +7,19 @@ import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
+import java.util.Map;
+
 /**
- * 认证服务 Feign（转发 user 模块 /v1/auth）
+ * 认证服务 Feign（转发 user 模块 /auth）
  */
 @FeignClient(name = "xiaobin-user", contextId = "userAuthFeignClient", path = "/auth")
 public interface AuthFeignClient {
 
     @PostMapping("/register")
     Object register(@RequestBody RegisterRequest request);
+
+    @PostMapping("/register/email")
+    Object registerByEmail(@RequestBody Map<String, String> request);
 
     @PostMapping("/login")
     LoginVO login(@RequestBody LoginRequest request);
