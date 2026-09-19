@@ -3,6 +3,7 @@ package com.xml.xiaobinnode.service.impl;
 import com.xml.xiaobinnode.common.exception.BusinessException;
 import com.xml.xiaobinnode.service.EmailVerifyCodeService;
 import com.xml.xiaobinnode.utils.EmailUtil;
+import com.xml.xiaobinnode.utils.ThreadPoolUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -31,7 +32,7 @@ public class EmailVerifyCodeServiceImpl implements EmailVerifyCodeService {
         // 检查发送频率限制
         String limitKey = SEND_LIMIT_PREFIX + email + ":" + purpose;
         Boolean hasLimit = redisTemplate.hasKey(limitKey);
-        if (Boolean.TRUE.equals(hasLimit)) {
+        if (hasLimit) {
             throw new BusinessException("发送过于频繁，请稍后再试");
         }
 
@@ -47,8 +48,7 @@ public class EmailVerifyCodeServiceImpl implements EmailVerifyCodeService {
 
         // 发送邮件
         String purposeText = getPurposeText(purpose);
-        emailUtil.sendVerifyCode(email, code, purposeText);
-
+        ThreadPoolUtil.getExecutor().execute(() -> emailUtil.sendVerifyCode(email, code, purposeText));
         log.info("验证码已发送: email={}, purpose={}, code={}", email, purpose, code);
     }
 
